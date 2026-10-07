@@ -1,0 +1,150 @@
+{
+  "project_info": {
+    "project_number": "192336393032",
+    "project_id": "yes-gurl-app",
+    "storage_bucket": "yes-gurl-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192336393032:android:8dd61844d5c9c91b8f797d",
+        "android_client_info": {
+          "package_name": "com.mycompany.yesgurl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "192336393032-0urbvhhb6mjshvdpn5952mv5erdg1fl9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.yesgurl",
+            "certificate_hash": "2a6b6773fe5fe61d6228d326c593d4418adbaaa5"
+          }
+        },
+        {
+          "client_id": "192336393032-2tn12nevpp65c0sare03af32unrl9gbf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.yesgurl",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxiJy5_QtAHEVCYwzupV3dLHfFkrsouFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "192336393032-b6qhuhfpenm4jit7shaakskt1mlcfjd1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.yesgurl"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192336393032:android:0b43c8371b51f27e8f797d",
+        "android_client_info": {
+          "package_name": "com.mycompany.yesgurladmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "192336393032-dhiaaf4570b21vo1ghm9e0346r7ddci1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.yesgurladmin",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxiJy5_QtAHEVCYwzupV3dLHfFkrsouFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "192336393032-b6qhuhfpenm4jit7shaakskt1mlcfjd1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.yesgurl"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192336393032:android:36aad85eb41a10828f797d",
+        "android_client_info": {
+          "package_name": "com.mycompany.yesgurlapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "192336393032-20q96jds3bbmhhfrtu66pc7nt9618bks.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.yesgurlapp",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxiJy5_QtAHEVCYwzupV3dLHfFkrsouFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "192336393032-4k1ppspaed4183cflon5epfl6ua13lim.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "192336393032-b6qhuhfpenm4jit7shaakskt1mlcfjd1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.yesgurl"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

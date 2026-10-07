@@ -1,0 +1,7 @@
+
+build/
+.dart_tool/
+
+build/
+*.log
+.dart_tool/
