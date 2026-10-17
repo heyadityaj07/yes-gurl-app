@@ -209,7 +209,7 @@ class _LinkUpWidgetState extends State<LinkUpWidget>
                                                   true)
                                           ? FlutterFlowTheme.of(context)
                                               .primaryText
-                                          : Colors.white,
+                                          : FlutterFlowTheme.of(context).info,
                                       size: 24.0,
                                     ),
                                     onPressed: () async {
@@ -2220,10 +2220,12 @@ class _LinkUpWidgetState extends State<LinkUpWidget>
                                                             AlignmentDirectional(
                                                                 0.49, 1.25),
                                                         child: FaIcon(
-                                                          FaIconData(
-                                                              FontAwesomeIcons
-                                                                  .solidCircle
-                                                                  .data),
+                                                          FaIconData(const IconData(
+                                                              /* solidCircle */ 0xf111,
+                                                              fontFamily:
+                                                                  'FontAwesomeSolid',
+                                                              fontPackage:
+                                                                  'font_awesome_flutter')),
                                                           color: FlutterFlowTheme
                                                                   .of(context)
                                                               .primary,

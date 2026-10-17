@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:math';
 import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
-import 'splash_screen_widget.dart' show SplashScreenWidget;
+import 'splash_screen_widget.dart' hide SplashScreenWidget;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';

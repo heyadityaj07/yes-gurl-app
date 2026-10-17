@@ -277,6 +277,17 @@ final parametersBuilderMap =
           'community': getParameter<DocumentReference>(data, 'community'),
         },
       ),
+  'joinClub': ParameterData.none(),
+  'successPage': ParameterData.none(),
+  'babesClub': ParameterData.none(),
+  'discountPerk': ParameterData.none(),
+  'bookSession': ParameterData.none(),
+  'pollScreen': ParameterData.none(),
+  'friendshipSpotlight': ParameterData.none(),
+  'addSpotlight': ParameterData.none(),
+  'event': ParameterData.none(),
+  'signUp008': ParameterData.none(),
+  'profileEditStarSign': ParameterData.none(),
 };
 
 Map<String, dynamic> getInitialParameterData(Map<String, dynamic> data) {

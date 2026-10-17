@@ -445,7 +445,7 @@ class _SignUp007WidgetState extends State<SignUp007Widget>
                         logFirebaseEvent('IconButton_navigate_to');
 
                         context.goNamed(
-                          SignUp008PrivacyWidget.routeName,
+                          SignUp008Widget.routeName,
                           extra: <String, dynamic>{
                             '__transition_info__': TransitionInfo(
                               hasTransition: true,

@@ -239,10 +239,12 @@ class _TestStartWidgetState extends State<TestStartWidget> {
                                                               AlignmentDirectional(
                                                                   0.49, 1.25),
                                                           child: FaIcon(
-                                                            FaIconData(
-                                                                FontAwesomeIcons
-                                                                    .solidCircle
-                                                                    .data),
+                                                            FaIconData(const IconData(
+                                                                /* solidCircle */ 0xf111,
+                                                                fontFamily:
+                                                                    'FontAwesomeSolid',
+                                                                fontPackage:
+                                                                    'font_awesome_flutter')),
                                                             color: FlutterFlowTheme
                                                                     .of(context)
                                                                 .primary,
@@ -320,10 +322,12 @@ class _TestStartWidgetState extends State<TestStartWidget> {
                                                               AlignmentDirectional(
                                                                   0.49, 1.25),
                                                           child: FaIcon(
-                                                            FaIconData(
-                                                                FontAwesomeIcons
-                                                                    .solidCircle
-                                                                    .data),
+                                                            FaIconData(const IconData(
+                                                                /* solidCircle */ 0xf111,
+                                                                fontFamily:
+                                                                    'FontAwesomeSolid',
+                                                                fontPackage:
+                                                                    'font_awesome_flutter')),
                                                             color: FlutterFlowTheme
                                                                     .of(context)
                                                                 .primary,

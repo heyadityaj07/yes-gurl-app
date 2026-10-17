@@ -81,7 +81,8 @@ export '/profile/profile_settings_report/profile_settings_report_widget.dart'
     show ProfileSettingsReportWidget;
 export '/potential_connections/potential_connections/potential_connections_widget.dart'
     show PotentialConnectionsWidget;
-export '/splash_screen/splash_screen_widget.dart' show SplashScreenWidget;
+export '/profile/splash_screen/splash_screen_widget.dart'
+    show SplashScreenWidget;
 export '/communities/communities/communities_widget.dart'
     show CommunitiesWidget;
 export '/communities/communities_see_all/communities_see_all_widget.dart'
@@ -103,3 +104,18 @@ export '/communities/communities_edit/communities_edit_widget.dart'
     show CommunitiesEditWidget;
 export '/communities/share_community/share_community_widget.dart'
     show ShareCommunityWidget;
+export '/club/join_club/join_club_widget.dart' show JoinClubWidget;
+export '/club/success_page/success_page_widget.dart' show SuccessPageWidget;
+export '/club/babes_club/babes_club_widget.dart' show BabesClubWidget;
+export '/club/babes_club_chat/babes_club_chat_widget.dart'
+    show BabesClubChatPageWidget;
+export '/club/discount_perk/discount_perk_widget.dart' show DiscountPerkWidget;
+export '/club/book_session/book_session_widget.dart' show BookSessionWidget;
+export '/club/poll_screen/poll_screen_widget.dart' show PollScreenWidget;
+export '/club/friendship_spotlight/friendship_spotlight_widget.dart'
+    show FriendshipSpotlightWidget;
+export '/club/add_spotlight/add_spotlight_widget.dart' show AddSpotlightWidget;
+export '/club/event/event_widget.dart' show EventWidget;
+export '/sign_up/sign_up008/sign_up008_widget.dart' show SignUp008Widget;
+export '/profile/profile_edit_star_sign/profile_edit_star_sign_widget.dart'
+    show ProfileEditStarSignWidget;

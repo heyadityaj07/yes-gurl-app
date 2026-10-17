@@ -319,8 +319,12 @@ class _SignUp010WidgetState extends State<SignUp010Widget>
                                         mainAxisSize: MainAxisSize.max,
                                         children: [
                                           FaIcon(
-                                            FaIconData(FontAwesomeIcons
-                                                .handPointLeft.data),
+                                            FaIconData(const IconData(
+                                                /* handPointLeft */ 0xf0a5,
+                                                fontFamily:
+                                                    'FontAwesomeRegular',
+                                                fontPackage:
+                                                    'font_awesome_flutter')),
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
                                             size: 40.0,
@@ -375,8 +379,11 @@ class _SignUp010WidgetState extends State<SignUp010Widget>
                                         mainAxisSize: MainAxisSize.max,
                                         children: [
                                           FaIcon(
-                                            FaIconData(FontAwesomeIcons
-                                                .microphoneAlt.data),
+                                            FaIconData(const IconData(
+                                                /* microphoneAlt */ 0xf3c9,
+                                                fontFamily: 'FontAwesomeSolid',
+                                                fontPackage:
+                                                    'font_awesome_flutter')),
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
                                             size: 40.0,

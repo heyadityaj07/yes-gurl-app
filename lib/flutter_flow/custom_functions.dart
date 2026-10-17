@@ -1165,3 +1165,23 @@ bool filterCommunity(
       )
       .isNotEmpty;
 }
+
+double getPollProgress(
+  List<VoteDataStruct> voteDetails,
+  String option,
+) {
+  if (voteDetails.isEmpty) {
+    return 0.0;
+  }
+
+  int totalVotes = voteDetails.length;
+  int optionVotes = 0;
+
+  for (final vote in voteDetails) {
+    if (vote.selectedOption == option) {
+      optionVotes++;
+    }
+  }
+
+  return totalVotes == 0 ? 0.0 : optionVotes / totalVotes;
+}

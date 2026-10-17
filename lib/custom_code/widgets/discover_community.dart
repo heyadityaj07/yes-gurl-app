@@ -18,8 +18,8 @@ import 'index.dart'; // Imports other custom widgets
 import 'index.dart'; // Imports other custom widgets
 
 import '/auth/firebase_auth/auth_util.dart';
-import '/components/community_card_widget.dart';
-import '/link_up/no_community/no_community_widget.dart';
+import '/communities/community_card/community_card_widget.dart';
+import 'package:yes_gurl/communities/no_community/no_community_widget.dart';
 
 class DiscoverCommunity extends StatefulWidget {
   const DiscoverCommunity({
@@ -280,7 +280,7 @@ class _DiscoverCommunityState extends State<DiscoverCommunity> {
                 ),
               )
             : visible.isEmpty
-                ? const Center(child: NoCommunityWidget())
+                ? Center(child: NoCommunityWidget())
                 : ListView.separated(
                     controller: bounded ? _scrollController : null,
                     primary: false,

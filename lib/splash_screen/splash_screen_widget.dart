@@ -14,6 +14,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
 import 'splash_screen_model.dart';
 export 'splash_screen_model.dart';
 
@@ -226,12 +227,12 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
         body: SafeArea(
           top: true,
           child: Align(
-            alignment: AlignmentDirectional(0.0, 0.0),
+            alignment: AlignmentDirectional(0, 0),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/flutterflow_logo.png',
-                width: 250.0,
+                width: 250,
                 fit: BoxFit.cover,
               ),
             ).animateOnPageLoad(animationsMap['imageOnPageLoadAnimation']!),

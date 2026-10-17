@@ -7,8 +7,9 @@ export 'circularprogressindicatorwidget.dart'
 export 'chat_messages_widget.dart' show ChatMessagesWidget;
 export 'chat_messages_widget_old.dart' show ChatMessagesWidgetOld;
 export 'image_view.dart' show ImageView;
-export 'potenitial_matches.dart' show PotenitialMatches;
 export 'potential_conenction_cursol.dart' show PotentialConenctionCursol;
 export 'chat_message_text.dart' show ChatMessageText;
 export 'community_messages.dart' show CommunityMessages;
 export 'discover_community.dart' show DiscoverCommunity;
+export 'babes_club_chat_widget.dart' show BabesClubChatWidget;
+

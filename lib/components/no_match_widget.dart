@@ -95,8 +95,11 @@ class _NoMatchWidgetState extends State<NoMatchWidget> {
                                       alignment:
                                           AlignmentDirectional(0.49, 1.25),
                                       child: FaIcon(
-                                        FaIconData(
-                                            FontAwesomeIcons.solidCircle.data),
+                                        FaIconData(const IconData(
+                                            /* solidCircle */ 0xf111,
+                                            fontFamily: 'FontAwesomeSolid',
+                                            fontPackage:
+                                                'font_awesome_flutter')),
                                         color: FlutterFlowTheme.of(context)
                                             .primary,
                                         size: 55.0,

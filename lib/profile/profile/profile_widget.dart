@@ -295,8 +295,9 @@ class _ProfileWidgetState extends State<ProfileWidget>
             ),
             onPressed: () async {
               logFirebaseEvent('PROFILE_arrow_back_ios_new_ICN_ON_TAP');
-              logFirebaseEvent('IconButton_navigate_back');
-              context.safePop();
+              logFirebaseEvent('IconButton_navigate_to');
+
+              context.goNamed(PotentialConnectionsWidget.routeName);
             },
           ),
           title: Align(

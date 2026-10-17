@@ -1082,7 +1082,9 @@ class _PotentialMatchesProfileWidgetState
                                                         FlutterFlowTheme.of(
                                                                 context)
                                                             .bodyMediumFamily,
-                                                    color: Colors.white,
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .info,
                                                     fontSize: 16.0,
                                                     letterSpacing: 0.0,
                                                     fontWeight: FontWeight.w500,
@@ -1472,6 +1474,41 @@ class _PotentialMatchesProfileWidgetState
                                   ),
                                 ],
                               ),
+                              if (columnUserRecord.starSign != null &&
+                                  columnUserRecord.starSign != '')
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Icon(
+                                      Icons.star_rate,
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                      size: 25.0,
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          5.0, 0.0, 0.0, 0.0),
+                                      child: Text(
+                                        columnUserRecord.starSign,
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              fontFamily:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMediumFamily,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
+                                              fontSize: 16.0,
+                                              letterSpacing: 0.0,
+                                              useGoogleFonts:
+                                                  !FlutterFlowTheme.of(context)
+                                                      .bodyMediumIsCustom,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                             ].divide(SizedBox(width: 15.0)),
                           ),
                         ).animateOnPageLoad(
@@ -1649,8 +1686,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest1 ==
                                                 'arts & crafts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .palette.data),
+                                                FaIconData(const IconData(
+                                                    /* palette */ 0xf53f,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -1803,8 +1844,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest1 ==
                                                 'shopping')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .shoppingBag.data),
+                                                FaIconData(const IconData(
+                                                    /* shoppingBag */ 0xf290,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -1840,8 +1885,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest1 ==
                                                 'workouts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .weightHanging.data),
+                                                FaIconData(const IconData(
+                                                    /* weightHanging */ 0xf5cd,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -1911,8 +1960,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest2 ==
                                                 'arts & crafts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .palette.data),
+                                                FaIconData(const IconData(
+                                                    /* palette */ 0xf53f,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2065,8 +2118,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest2 ==
                                                 'shopping')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .shoppingBag.data),
+                                                FaIconData(const IconData(
+                                                    /* shoppingBag */ 0xf290,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2102,8 +2159,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest2 ==
                                                 'workouts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .weightHanging.data),
+                                                FaIconData(const IconData(
+                                                    /* weightHanging */ 0xf5cd,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2173,8 +2234,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest3 ==
                                                 'arts & crafts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .palette.data),
+                                                FaIconData(const IconData(
+                                                    /* palette */ 0xf53f,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2327,8 +2392,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest3 ==
                                                 'shopping')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .shoppingBag.data),
+                                                FaIconData(const IconData(
+                                                    /* shoppingBag */ 0xf290,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2364,8 +2433,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest3 ==
                                                 'workouts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .weightHanging.data),
+                                                FaIconData(const IconData(
+                                                    /* weightHanging */ 0xf5cd,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2435,8 +2508,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest4 ==
                                                 'arts & crafts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .palette.data),
+                                                FaIconData(const IconData(
+                                                    /* palette */ 0xf53f,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2589,8 +2666,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest4 ==
                                                 'shopping')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .shoppingBag.data),
+                                                FaIconData(const IconData(
+                                                    /* shoppingBag */ 0xf290,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,
@@ -2626,8 +2707,12 @@ class _PotentialMatchesProfileWidgetState
                                             if (columnUserRecord.interest4 ==
                                                 'workouts')
                                               FaIcon(
-                                                FaIconData(FontAwesomeIcons
-                                                    .weightHanging.data),
+                                                FaIconData(const IconData(
+                                                    /* weightHanging */ 0xf5cd,
+                                                    fontFamily:
+                                                        'FontAwesomeSolid',
+                                                    fontPackage:
+                                                        'font_awesome_flutter')),
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .secondaryText,

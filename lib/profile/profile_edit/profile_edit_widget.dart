@@ -367,19 +367,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1200.0.ms,
+            delay: 1050.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
           ),
         ],
       ),
-      'rowOnPageLoadAnimation5': AnimationInfo(
+      'textOnPageLoadAnimation15': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1250.0.ms,
+            delay: 1100.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -391,7 +391,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1300.0.ms,
+            delay: 1150.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
+          ),
+        ],
+      ),
+      'rowOnPageLoadAnimation5': AnimationInfo(
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 1200.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -403,19 +415,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1350.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-        ],
-      ),
-      'rowOnPageLoadAnimation7': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 1400.0.ms,
+            delay: 1250.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -427,7 +427,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1450.0.ms,
+            delay: 1300.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
+          ),
+        ],
+      ),
+      'rowOnPageLoadAnimation7': AnimationInfo(
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 1350.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -439,19 +451,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1500.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-        ],
-      ),
-      'rowOnPageLoadAnimation9': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 1550.0.ms,
+            delay: 1400.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -463,7 +463,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1600.0.ms,
+            delay: 1450.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
+          ),
+        ],
+      ),
+      'rowOnPageLoadAnimation9': AnimationInfo(
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 1500.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -475,7 +487,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         effectsBuilder: () => [
           FadeEffect(
             curve: Curves.easeInOut,
-            delay: 1650.0.ms,
+            delay: 1550.0.ms,
             duration: 600.0.ms,
             begin: 0.0,
             end: 1.0,
@@ -483,6 +495,30 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
         ],
       ),
       'dividerOnPageLoadAnimation7': AnimationInfo(
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 1600.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
+          ),
+        ],
+      ),
+      'rowOnPageLoadAnimation11': AnimationInfo(
+        trigger: AnimationTrigger.onPageLoad,
+        effectsBuilder: () => [
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 1650.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
+          ),
+        ],
+      ),
+      'dividerOnPageLoadAnimation8': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
           FadeEffect(
@@ -1459,14 +1495,13 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   logFirebaseEvent('Row_navigate_to');
 
                                   context.pushNamed(
-                                      ProfileEditAdditionalRelationshipWidget
-                                          .routeName);
+                                      ProfileEditStarSignWidget.routeName);
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
                                     Text(
-                                      'relationship',
+                                      'star sign',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -1492,6 +1527,99 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                 onTap: () async {
                                   logFirebaseEvent(
                                       'PROFILE_EDIT_PAGE_Row_acrmaurn_ON_TAP');
+                                  logFirebaseEvent('Row_navigate_to');
+
+                                  context.pushNamed(
+                                      ProfileEditStarSignWidget.routeName);
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    AuthUserStreamWidget(
+                                      builder: (context) => Text(
+                                        valueOrDefault(
+                                            currentUserDocument?.starSign, ''),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              fontFamily:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMediumFamily,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryText,
+                                              letterSpacing: 0.0,
+                                              useGoogleFonts:
+                                                  !FlutterFlowTheme.of(context)
+                                                      .bodyMediumIsCustom,
+                                            ),
+                                      ).animateOnPageLoad(animationsMap[
+                                          'textOnPageLoadAnimation14']!),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(
+                                thickness: 2.0,
+                                color: FlutterFlowTheme.of(context).alternate,
+                              ).animateOnPageLoad(animationsMap[
+                                  'dividerOnPageLoadAnimation3']!),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: double.infinity,
+                          height: 70.0,
+                          decoration: BoxDecoration(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  logFirebaseEvent(
+                                      'PROFILE_EDIT_PAGE_Row_dry8nqby_ON_TAP');
+                                  logFirebaseEvent('Row_navigate_to');
+
+                                  context.pushNamed(
+                                      ProfileEditAdditionalRelationshipWidget
+                                          .routeName);
+                                },
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Text(
+                                      'relationship',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            fontFamily:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMediumFamily,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.w600,
+                                            useGoogleFonts:
+                                                !FlutterFlowTheme.of(context)
+                                                    .bodyMediumIsCustom,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ).animateOnPageLoad(
+                                  animationsMap['rowOnPageLoadAnimation4']!),
+                              InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  logFirebaseEvent(
+                                      'PROFILE_EDIT_PAGE_Row_pi143i11_ON_TAP');
                                   logFirebaseEvent('Row_navigate_to');
 
                                   context.pushNamed(
@@ -1522,7 +1650,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                                       .bodyMediumIsCustom,
                                             ),
                                       ).animateOnPageLoad(animationsMap[
-                                          'textOnPageLoadAnimation14']!),
+                                          'textOnPageLoadAnimation15']!),
                                     ),
                                   ],
                                 ),
@@ -1531,7 +1659,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                 thickness: 2.0,
                                 color: FlutterFlowTheme.of(context).alternate,
                               ).animateOnPageLoad(animationsMap[
-                                  'dividerOnPageLoadAnimation3']!),
+                                  'dividerOnPageLoadAnimation4']!),
                             ],
                           ),
                         ),
@@ -1580,7 +1708,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation4']!),
+                                  animationsMap['rowOnPageLoadAnimation5']!),
                               InkWell(
                                 splashColor: Colors.transparent,
                                 focusColor: Colors.transparent,
@@ -1621,12 +1749,12 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation5']!),
+                                  animationsMap['rowOnPageLoadAnimation6']!),
                               Divider(
                                 thickness: 2.0,
                                 color: FlutterFlowTheme.of(context).alternate,
                               ).animateOnPageLoad(animationsMap[
-                                  'dividerOnPageLoadAnimation4']!),
+                                  'dividerOnPageLoadAnimation5']!),
                             ],
                           ),
                         ),
@@ -1674,7 +1802,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation6']!),
+                                  animationsMap['rowOnPageLoadAnimation7']!),
                               InkWell(
                                 splashColor: Colors.transparent,
                                 focusColor: Colors.transparent,
@@ -1715,12 +1843,12 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation7']!),
+                                  animationsMap['rowOnPageLoadAnimation8']!),
                               Divider(
                                 thickness: 2.0,
                                 color: FlutterFlowTheme.of(context).alternate,
                               ).animateOnPageLoad(animationsMap[
-                                  'dividerOnPageLoadAnimation5']!),
+                                  'dividerOnPageLoadAnimation6']!),
                             ],
                           ),
                         ),
@@ -1766,7 +1894,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation8']!),
+                                  animationsMap['rowOnPageLoadAnimation9']!),
                               InkWell(
                                 splashColor: Colors.transparent,
                                 focusColor: Colors.transparent,
@@ -1809,12 +1937,12 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                   ],
                                 ),
                               ).animateOnPageLoad(
-                                  animationsMap['rowOnPageLoadAnimation9']!),
+                                  animationsMap['rowOnPageLoadAnimation10']!),
                               Divider(
                                 thickness: 2.0,
                                 color: FlutterFlowTheme.of(context).alternate,
                               ).animateOnPageLoad(animationsMap[
-                                  'dividerOnPageLoadAnimation6']!),
+                                  'dividerOnPageLoadAnimation7']!),
                             ],
                           ),
                         ),
@@ -1965,14 +2093,14 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget>
                                         ],
                                       ),
                                     ).animateOnPageLoad(animationsMap[
-                                        'rowOnPageLoadAnimation10']!),
+                                        'rowOnPageLoadAnimation11']!),
                                   ),
                                   Divider(
                                     thickness: 2.0,
                                     color:
                                         FlutterFlowTheme.of(context).alternate,
                                   ).animateOnPageLoad(animationsMap[
-                                      'dividerOnPageLoadAnimation7']!),
+                                      'dividerOnPageLoadAnimation8']!),
                                 ],
                               ),
                             ),

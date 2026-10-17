@@ -127,8 +127,11 @@ class _CommonAppbarWidgetState extends State<CommonAppbarWidget> {
                   color: FlutterFlowTheme.of(context).accent1,
                   size: 30.0,
                 ),
-                onPressed: () {
-                  print('IconButton pressed ...');
+                onPressed: () async {
+                  logFirebaseEvent('COMMON_APPBAR_COMP_star_ICN_ON_TAP');
+                  logFirebaseEvent('IconButton_navigate_to');
+
+                  context.pushNamed(JoinClubWidget.routeName);
                 },
               ),
             ),

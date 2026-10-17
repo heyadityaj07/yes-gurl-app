@@ -473,7 +473,10 @@ class _TestSummaryWidgetState extends State<TestSummaryWidget>
                                     currentUserDocument?.personalityType, '') ==
                                 'entj') {
                               return FaIcon(
-                                FaIconData(FontAwesomeIcons.handPointLeft.data),
+                                FaIconData(const IconData(
+                                    /* handPointLeft */ 0xf0a5,
+                                    fontFamily: 'FontAwesomeRegular',
+                                    fontPackage: 'font_awesome_flutter')),
                                 color: FlutterFlowTheme.of(context).primaryText,
                                 size: 100.0,
                               );
@@ -481,7 +484,10 @@ class _TestSummaryWidgetState extends State<TestSummaryWidget>
                                     currentUserDocument?.personalityType, '') ==
                                 'entp') {
                               return FaIcon(
-                                FaIconData(FontAwesomeIcons.microphoneAlt.data),
+                                FaIconData(const IconData(
+                                    /* microphoneAlt */ 0xf3c9,
+                                    fontFamily: 'FontAwesomeSolid',
+                                    fontPackage: 'font_awesome_flutter')),
                                 color: FlutterFlowTheme.of(context).primaryText,
                                 size: 100.0,
                               );

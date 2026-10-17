@@ -977,9 +977,10 @@ class _PotentialConnectionsWidgetState extends State<PotentialConnectionsWidget>
                                                                             0.0),
                                                                         child:
                                                                             FaIcon(
-                                                                          FaIconData(FontAwesomeIcons
-                                                                              .solidCircle
-                                                                              .data),
+                                                                          FaIconData(const IconData(
+                                                                              /* solidCircle */ 0xf111,
+                                                                              fontFamily: 'FontAwesomeSolid',
+                                                                              fontPackage: 'font_awesome_flutter')),
                                                                           color:
                                                                               FlutterFlowTheme.of(context).primary,
                                                                           size:
@@ -1258,9 +1259,10 @@ class _PotentialConnectionsWidgetState extends State<PotentialConnectionsWidget>
                                                                             1.25),
                                                                         child:
                                                                             FaIcon(
-                                                                          FaIconData(FontAwesomeIcons
-                                                                              .solidCircle
-                                                                              .data),
+                                                                          FaIconData(const IconData(
+                                                                              /* solidCircle */ 0xf111,
+                                                                              fontFamily: 'FontAwesomeSolid',
+                                                                              fontPackage: 'font_awesome_flutter')),
                                                                           color:
                                                                               FlutterFlowTheme.of(context).primary,
                                                                           size:
@@ -1732,7 +1734,7 @@ class _PotentialConnectionsWidgetState extends State<PotentialConnectionsWidget>
                                                                                           ),
                                                                                         if (functions.getRecommendation(containerUserRecord.personalityType, valueOrDefault(currentUserDocument?.personalityType, '')).toString() == '0')
                                                                                           FaIcon(
-                                                                                            FaIconData(FontAwesomeIcons.leaf.data),
+                                                                                            FaIconData(const IconData(/* leaf */ 0xf06c, fontFamily: 'FontAwesomeSolid', fontPackage: 'font_awesome_flutter')),
                                                                                             color: (currentUserDocument?.messageSent?.toList() ?? []).contains(usersItem) ? Color(0x7EFE99AB) : FlutterFlowTheme.of(context).primary,
                                                                                             size: 15.0,
                                                                                           ),

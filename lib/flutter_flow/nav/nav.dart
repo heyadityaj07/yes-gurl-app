@@ -577,6 +577,66 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               collectionNamePath: ['community'],
             ),
           ),
+        ),
+        FFRoute(
+          name: JoinClubWidget.routeName,
+          path: JoinClubWidget.routePath,
+          builder: (context, params) => JoinClubWidget(),
+        ),
+        FFRoute(
+          name: SuccessPageWidget.routeName,
+          path: SuccessPageWidget.routePath,
+          builder: (context, params) => SuccessPageWidget(),
+        ),
+        FFRoute(
+          name: BabesClubWidget.routeName,
+          path: BabesClubWidget.routePath,
+          builder: (context, params) => BabesClubWidget(),
+        ),
+        FFRoute(
+          name: BabesClubChatPageWidget.routeName,
+          path: BabesClubChatPageWidget.routePath,
+          builder: (context, params) => BabesClubChatPageWidget(),
+        ),
+        FFRoute(
+          name: DiscountPerkWidget.routeName,
+          path: DiscountPerkWidget.routePath,
+          builder: (context, params) => DiscountPerkWidget(),
+        ),
+        FFRoute(
+          name: BookSessionWidget.routeName,
+          path: BookSessionWidget.routePath,
+          builder: (context, params) => BookSessionWidget(),
+        ),
+        FFRoute(
+          name: PollScreenWidget.routeName,
+          path: PollScreenWidget.routePath,
+          builder: (context, params) => PollScreenWidget(),
+        ),
+        FFRoute(
+          name: FriendshipSpotlightWidget.routeName,
+          path: FriendshipSpotlightWidget.routePath,
+          builder: (context, params) => FriendshipSpotlightWidget(),
+        ),
+        FFRoute(
+          name: AddSpotlightWidget.routeName,
+          path: AddSpotlightWidget.routePath,
+          builder: (context, params) => AddSpotlightWidget(),
+        ),
+        FFRoute(
+          name: EventWidget.routeName,
+          path: EventWidget.routePath,
+          builder: (context, params) => EventWidget(),
+        ),
+        FFRoute(
+          name: SignUp008Widget.routeName,
+          path: SignUp008Widget.routePath,
+          builder: (context, params) => SignUp008Widget(),
+        ),
+        FFRoute(
+          name: ProfileEditStarSignWidget.routeName,
+          path: ProfileEditStarSignWidget.routePath,
+          builder: (context, params) => ProfileEditStarSignWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

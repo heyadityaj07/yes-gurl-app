@@ -157,7 +157,10 @@ class _ProfileEditLetsGoOffline3WidgetState
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
                                     FaIcon(
-                                      FaIconData(FontAwesomeIcons.palette.data),
+                                      FaIconData(const IconData(
+                                          /* palette */ 0xf53f,
+                                          fontFamily: 'FontAwesomeSolid',
+                                          fontPackage: 'font_awesome_flutter')),
                                       color: FlutterFlowTheme.of(context)
                                           .secondaryText,
                                       size: 30.0,
@@ -1416,8 +1419,10 @@ class _ProfileEditLetsGoOffline3WidgetState
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
                                     FaIcon(
-                                      FaIconData(
-                                          FontAwesomeIcons.shoppingBag.data),
+                                      FaIconData(const IconData(
+                                          /* shoppingBag */ 0xf290,
+                                          fontFamily: 'FontAwesomeSolid',
+                                          fontPackage: 'font_awesome_flutter')),
                                       color: FlutterFlowTheme.of(context)
                                           .secondaryText,
                                       size: 30.0,
@@ -1704,8 +1709,10 @@ class _ProfileEditLetsGoOffline3WidgetState
                                   mainAxisSize: MainAxisSize.max,
                                   children: [
                                     FaIcon(
-                                      FaIconData(
-                                          FontAwesomeIcons.weightHanging.data),
+                                      FaIconData(const IconData(
+                                          /* weightHanging */ 0xf5cd,
+                                          fontFamily: 'FontAwesomeSolid',
+                                          fontPackage: 'font_awesome_flutter')),
                                       color: FlutterFlowTheme.of(context)
                                           .secondaryText,
                                       size: 30.0,

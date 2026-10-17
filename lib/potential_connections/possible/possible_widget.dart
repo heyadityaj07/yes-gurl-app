@@ -79,7 +79,9 @@ class _PossibleWidgetState extends State<PossibleWidget> {
                       child: Align(
                         alignment: AlignmentDirectional(0.0, 0.0),
                         child: FaIcon(
-                          FaIconData(FontAwesomeIcons.leaf.data),
+                          FaIconData(const IconData(/* leaf */ 0xf06c,
+                              fontFamily: 'FontAwesomeSolid',
+                              fontPackage: 'font_awesome_flutter')),
                           color: FlutterFlowTheme.of(context).primaryText,
                           size: 30.0,
                         ),

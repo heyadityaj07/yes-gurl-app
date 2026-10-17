@@ -57,6 +57,14 @@ Future<bool> deleteCommunity(DocumentReference? community) async {
         await FirebaseStorage.instance.refFromURL(imageUrl).delete();
       } catch (_) {}
     }
+    final sendnotification = await FirebaseFirestore.instance
+        .collection('notification')
+        .where('community', isEqualTo: community)
+        .get();
+
+    for (final sendnotificationDoc in sendnotification.docs) {
+      await sendnotificationDoc.reference.delete();
+    }
 
     await community.delete();
     return true;

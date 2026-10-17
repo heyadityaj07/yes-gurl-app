@@ -404,8 +404,10 @@ class _NavbarWidgetState extends State<NavbarWidget> {
                         child: Stack(
                           children: [
                             FaIcon(
-                              FaIconData(
-                                  FontAwesomeIcons.solidCalendarAlt.data),
+                              FaIconData(const IconData(
+                                  /* solidCalendarAlt */ 0xf073,
+                                  fontFamily: 'FontAwesomeSolid',
+                                  fontPackage: 'font_awesome_flutter')),
                               color: widget!.index == 3
                                   ? FlutterFlowTheme.of(context).primary
                                   : FlutterFlowTheme.of(context).secondaryText,

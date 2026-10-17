@@ -416,6 +416,16 @@ class UserRecord extends FirestoreRecord {
   List<DocumentReference> get messageReports => _messageReports ?? const [];
   bool hasMessageReports() => _messageReports != null;
 
+  // "star_sign" field.
+  String? _starSign;
+  String get starSign => _starSign ?? '';
+  bool hasStarSign() => _starSign != null;
+
+  // "club_member" field.
+  DocumentReference? _clubMember;
+  DocumentReference? get clubMember => _clubMember;
+  bool hasClubMember() => _clubMember != null;
+
   void _initializeFields() {
     _email = snapshotData['email'] as String?;
     _timeCreated = snapshotData['time_created'] as DateTime?;
@@ -498,6 +508,8 @@ class UserRecord extends FirestoreRecord {
     _todayPotential = snapshotData['today_potential'] as bool?;
     _reportCommunityList = getDataList(snapshotData['reportCommunityList']);
     _messageReports = getDataList(snapshotData['message_reports']);
+    _starSign = snapshotData['star_sign'] as String?;
+    _clubMember = snapshotData['club_member'] as DocumentReference?;
   }
 
   static CollectionReference get collection =>
@@ -589,6 +601,8 @@ Map<String, dynamic> createUserRecordData({
   DateTime? hideprofileTime,
   bool? superUser,
   bool? todayPotential,
+  String? starSign,
+  DocumentReference? clubMember,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -648,6 +662,8 @@ Map<String, dynamic> createUserRecordData({
       'hideprofile_time': hideprofileTime,
       'superUser': superUser,
       'today_potential': todayPotential,
+      'star_sign': starSign,
+      'club_member': clubMember,
     }.withoutNulls,
   );
 
@@ -742,7 +758,9 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         e1?.superUser == e2?.superUser &&
         e1?.todayPotential == e2?.todayPotential &&
         listEquality.equals(e1?.reportCommunityList, e2?.reportCommunityList) &&
-        listEquality.equals(e1?.messageReports, e2?.messageReports);
+        listEquality.equals(e1?.messageReports, e2?.messageReports) &&
+        e1?.starSign == e2?.starSign &&
+        e1?.clubMember == e2?.clubMember;
   }
 
   @override
@@ -825,7 +843,9 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         e?.superUser,
         e?.todayPotential,
         const ListEquality().hash(e?.reportCommunityList),
-        const ListEquality().hash(e?.messageReports)
+        const ListEquality().hash(e?.messageReports),
+        e?.starSign,
+        e?.clubMember
       ]);
 
   @override
