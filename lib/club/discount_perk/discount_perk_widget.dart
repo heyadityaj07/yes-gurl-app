@@ -120,7 +120,7 @@ class _DiscountPerkWidgetState extends State<DiscountPerkWidget> {
                     key: Key(
                         'Key4bg_${columnIndex}_of_${columnPerksRecordList.length}'),
                     brand: columnPerksRecord.brandName,
-                    isNew: true,
+                    isNew: false,
                     offer: columnPerksRecord.description,
                     code: columnPerksRecord.promoCode,
                     imageDesc: columnPerksRecord.imageUrl,

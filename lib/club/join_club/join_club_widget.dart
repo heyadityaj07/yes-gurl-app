@@ -1,3 +1,5 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/backend.dart';
 import '/club/benefit_row/benefit_row_widget.dart';
 import '/club/preview_card/preview_card_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -5,10 +7,15 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
+import '/flutter_flow/revenue_cat_util.dart' as revenue_cat;
 import '/index.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'join_club_model.dart';
@@ -35,6 +42,30 @@ class _JoinClubWidgetState extends State<JoinClubWidget> {
     _model = createModel(context, () => JoinClubModel());
 
     logFirebaseEvent('screen_view', parameters: {'screen_name': 'joinClub'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('JOIN_CLUB_PAGE_joinClub_ON_INIT_STATE');
+      logFirebaseEvent('joinClub_firestore_query');
+      _model.clubFeature = await queryClubFeaturesRecordOnce(
+        singleRecord: true,
+      ).then((s) => s.firstOrNull);
+      logFirebaseEvent('joinClub_backend_call');
+
+      await _model.clubFeature!.reference.update({
+        ...mapToFirestore(
+          {
+            'clicks': FieldValue.increment(1),
+          },
+        ),
+      });
+      if ((currentUserDocument?.clubMember != null) ||
+          revenue_cat.hasActiveSubscription) {
+        logFirebaseEvent('joinClub_navigate_to');
+
+        context.goNamed(BabesClubWidget.routeName);
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
@@ -190,9 +221,51 @@ class _JoinClubWidgetState extends State<JoinClubWidget> {
                       highlightColor: Colors.transparent,
                       onTap: () async {
                         logFirebaseEvent('JOIN_CLUB_PAGE_Container_ON_TAP');
-                        logFirebaseEvent('Container_navigate_to');
+                        logFirebaseEvent('Container_custom_action');
+                        _model.result = await actions.joinOrRestoreBabesClub(
+                          false,
+                        );
+                        if (_model.result == 'success') {
+                          logFirebaseEvent('Container_navigate_to');
 
-                        context.pushNamed(SuccessPageWidget.routeName);
+                          context.pushNamed(SuccessPageWidget.routeName);
+                        } else if (_model.result == 'user_cancelled') {
+                          logFirebaseEvent('Container_show_snack_bar');
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Subscription package is currently unavailable. Please try again later.',
+                                style: TextStyle(
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
+                                ),
+                              ),
+                              duration: Duration(milliseconds: 4000),
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).secondary,
+                            ),
+                          );
+                        } else if (_model.result == 'package_unavailable') {
+                          logFirebaseEvent('Container_show_snack_bar');
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Purchase failed: ${_model.result}',
+                                style: TextStyle(
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
+                                ),
+                              ),
+                              duration: Duration(milliseconds: 4000),
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).secondary,
+                            ),
+                          );
+                        }
+
+                        safeSetState(() {});
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -211,7 +284,11 @@ class _JoinClubWidgetState extends State<JoinClubWidget> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  '£2.99',
+                                  valueOrDefault<String>(
+                                    revenue_cat.pricePerMonthString(revenue_cat
+                                        .offerings!.current!.monthly!),
+                                    '0',
+                                  ),
                                   style: FlutterFlowTheme.of(context)
                                       .headlineMedium
                                       .override(
@@ -246,6 +323,73 @@ class _JoinClubWidgetState extends State<JoinClubWidget> {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    InkWell(
+                      splashColor: Colors.transparent,
+                      focusColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onTap: () async {
+                        logFirebaseEvent('JOIN_CLUB_PAGE_Text_ON_TAP');
+                        logFirebaseEvent('Text_custom_action');
+                        _model.data = await actions.joinOrRestoreBabesClub(
+                          true,
+                        );
+                        if (_model.data == 'success') {
+                          logFirebaseEvent('Text_navigate_to');
+
+                          context.pushNamed(SuccessPageWidget.routeName);
+                        } else if (_model.data == 'no_active_subscription') {
+                          logFirebaseEvent('Text_show_snack_bar');
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'No active subscription found to restore.',
+                                style: TextStyle(
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
+                                ),
+                              ),
+                              duration: Duration(milliseconds: 4000),
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).secondary,
+                            ),
+                          );
+                        } else {
+                          logFirebaseEvent('Text_show_snack_bar');
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not restore purchases: ${_model.result}',
+                                style: TextStyle(
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
+                                ),
+                              ),
+                              duration: Duration(milliseconds: 4000),
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).secondary,
+                            ),
+                          );
+                        }
+
+                        safeSetState(() {});
+                      },
+                      child: Text(
+                        'restore subscription',
+                        style:
+                            FlutterFlowTheme.of(context).labelMedium.override(
+                                  fontFamily: FlutterFlowTheme.of(context)
+                                      .labelMediumFamily,
+                                  letterSpacing: 0.0,
+                                  decoration: TextDecoration.underline,
+                                  lineHeight: 1.27,
+                                  useGoogleFonts: !FlutterFlowTheme.of(context)
+                                      .labelMediumIsCustom,
+                                ),
                       ),
                     ),
                   ].divide(SizedBox(height: 16.0)),

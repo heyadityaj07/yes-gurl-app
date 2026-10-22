@@ -32,10 +32,16 @@ class ClubMembersRecord extends FirestoreRecord {
   DateTime? get purchaseDate => _purchaseDate;
   bool hasPurchaseDate() => _purchaseDate != null;
 
+  // "expiry_date" field.
+  DateTime? _expiryDate;
+  DateTime? get expiryDate => _expiryDate;
+  bool hasExpiryDate() => _expiryDate != null;
+
   void _initializeFields() {
     _user = snapshotData['user'] as DocumentReference?;
     _isActive = snapshotData['is_active'] as bool?;
     _purchaseDate = snapshotData['purchase_date'] as DateTime?;
+    _expiryDate = snapshotData['expiry_date'] as DateTime?;
   }
 
   static CollectionReference get collection =>
@@ -75,12 +81,14 @@ Map<String, dynamic> createClubMembersRecordData({
   DocumentReference? user,
   bool? isActive,
   DateTime? purchaseDate,
+  DateTime? expiryDate,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
       'user': user,
       'is_active': isActive,
       'purchase_date': purchaseDate,
+      'expiry_date': expiryDate,
     }.withoutNulls,
   );
 
@@ -94,12 +102,13 @@ class ClubMembersRecordDocumentEquality implements Equality<ClubMembersRecord> {
   bool equals(ClubMembersRecord? e1, ClubMembersRecord? e2) {
     return e1?.user == e2?.user &&
         e1?.isActive == e2?.isActive &&
-        e1?.purchaseDate == e2?.purchaseDate;
+        e1?.purchaseDate == e2?.purchaseDate &&
+        e1?.expiryDate == e2?.expiryDate;
   }
 
   @override
-  int hash(ClubMembersRecord? e) =>
-      const ListEquality().hash([e?.user, e?.isActive, e?.purchaseDate]);
+  int hash(ClubMembersRecord? e) => const ListEquality()
+      .hash([e?.user, e?.isActive, e?.purchaseDate, e?.expiryDate]);
 
   @override
   bool isValidKey(Object? o) => o is ClubMembersRecord;

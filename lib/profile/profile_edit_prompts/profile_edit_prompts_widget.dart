@@ -8,7 +8,7 @@ import '/profile/profile_edit_prompts1/profile_edit_prompts1_widget.dart';
 import '/profile/profile_edit_prompts2/profile_edit_prompts2_widget.dart';
 import '/profile/profile_edit_prompts3/profile_edit_prompts3_widget.dart';
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';

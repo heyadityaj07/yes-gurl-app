@@ -1,6 +1,4 @@
 // Automatic FlutterFlow imports
-import 'package:yes_gurl/flutter_flow/upload_data.dart';
-
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/backend/schema/enums/enums.dart';
@@ -15,50 +13,35 @@ import 'package:flutter/material.dart' hide RepeatMode;
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom widgets
+
+import 'package:easy_debounce/easy_debounce.dart';
+import 'package:flutter/services.dart';
+import 'package:yes_gurl/flutter_flow/flutter_flow_icon_button.dart';
+
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:intl/intl.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/firebase_storage/storage.dart';
 import '/club/join_club/join_club_widget.dart';
+import '/club/club_members/club_members_widget.dart';
+import 'package:yes_gurl/flutter_flow/upload_data.dart';
 
-/// BabesClubChatWidget
-///
-/// An intimate, high-performance close-friends group chat widget
-/// built specifically for the Yes Gurl Babes Club private community.
-///
-/// Implements:
-/// - Real-time messaging with scoped listener on newest 40 messages
-/// - Paginated scrolling for older messages using startAfterDocument
-/// - Active membership check & gating (only active club members can enter)
-/// - Direct in-line replies with quote previews
-/// - Rich emoji reactions with counter pills on messages
-/// - 24-hour auto-expiring images (client filter + backend scheduled cleanup)
-/// - Full-screen interactive image viewer (zoom & pan)
-/// - Message deletion (soft delete for own messages & admin moderation state)
-/// - Muted / restricted member states
-/// - Denormalized room member counter for ultra-fast load
-/// - Floating pill input bar matching the AI mockup (Screen 7)
 class BabesClubChatWidget extends StatefulWidget {
   const BabesClubChatWidget({
     super.key,
     this.width,
     this.height,
-    this.roomId = 'babes_club_lounge',
     this.isMember,
     this.onBack,
   });
 
   final double? width;
   final double? height;
-  final String roomId;
   final bool? isMember;
   final Future Function()? onBack;
+  static bool isChatOpen = false;
 
   @override
   State<BabesClubChatWidget> createState() => _BabesClubChatWidgetState();
@@ -74,6 +57,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   StreamSubscription? _liveMessagesSub;
   StreamSubscription? _roomSub;
   StreamSubscription? _memberSub;
+  StreamSubscription? _clubMembersSub;
 
   List<DocumentSnapshot> _liveDocs = [];
   final List<DocumentSnapshot> _olderDocs = [];
@@ -90,47 +74,117 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   bool _isMuted = false;
 
   // Room Metadata
-  String _roomName = 'Babes Club';
-  int _memberCount = 2400;
+  String _roomName = 'babes club';
+  int _memberCount = 0;
   String? _roomAvatar;
 
-  // Replying state
-  Map<String, dynamic>? _replyingToMessage;
-  String? _replyingToDocId;
+  /// Open Club Members Screen
+  void _openClubMembersScreen() {
+    try {
+      context.pushNamed(ClubMembersWidget.routeName);
+    } catch (_) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ClubMembersWidget(),
+        ),
+      );
+    }
+  }
 
-  // Selected image to send
+  // Replying state (Reference-only, no string IDs)
+  Map<String, dynamic>? _replyingToMessage;
+  DocumentReference? _replyingToMessageRef;
+  DocumentReference? _replyingToUserRef;
+
+  // In-memory cache for user documents fetched by DocumentReference.path
+  final Map<String, UserRecord> _userDocCache = {};
+  final Map<String, Completer<UserRecord?>> _inFlightUserFetches = {};
+
+  Future<UserRecord?> _fetchUserRecord(DocumentReference? userRef) async {
+    if (userRef == null) return null;
+    final path = userRef.path;
+
+    if (_userDocCache.containsKey(path)) {
+      return _userDocCache[path];
+    }
+
+    if (userRef == currentUserReference && currentUserDocument != null) {
+      _userDocCache[path] = currentUserDocument!;
+      return currentUserDocument;
+    }
+
+    if (_inFlightUserFetches.containsKey(path)) {
+      return _inFlightUserFetches[path]!.future;
+    }
+
+    final completer = Completer<UserRecord?>();
+    _inFlightUserFetches[path] = completer;
+
+    try {
+      final userRecord = await UserRecord.getDocumentOnce(userRef);
+      _userDocCache[path] = userRecord;
+      completer.complete(userRecord);
+      if (mounted) {
+        safeSetState(() {});
+      }
+      return userRecord;
+    } catch (_) {
+      completer.complete(null);
+      return null;
+    } finally {
+      _inFlightUserFetches.remove(path);
+    }
+  }
+
+  // Selected image state (FlutterFlow upload pipeline)
+  bool isDataUploading = false;
+  FFUploadedFile uploadedLocalFile =
+      FFUploadedFile(bytes: Uint8List.fromList([]));
+  String uploadedFileUrl = '';
+  String imagePath = '';
   Uint8List? _selectedImageBytes;
   String? _selectedImageFilename;
 
   // Quick reaction emojis
   static const List<String> _quickEmojis = ['❤️', '💕', '😍', '✨', '😂', '🌸'];
 
+  String get _activeRoomId => 'VaptPPzsVMyO5KYpGYPb';
+
   CollectionReference get _messagesCollection => FirebaseFirestore.instance
       .collection('chat_rooms')
-      .doc(widget.roomId)
+      .doc(_activeRoomId)
       .collection('chat_messages');
 
   DocumentReference get _roomDocRef =>
-      FirebaseFirestore.instance.collection('chat_rooms').doc(widget.roomId);
+      FirebaseFirestore.instance.collection('chat_rooms').doc(_activeRoomId);
 
   @override
   void initState() {
     super.initState();
+    BabesClubChatWidget.isChatOpen = true;
+    FFAppState().isBabesChatOpen = true;
     if (widget.isMember != null) {
       _isMemberActive = widget.isMember!;
       _isCheckingMembership = false;
     }
     _checkMembership();
     _initRoomMeta();
+    _initClubMembersCount();
     _initLiveMessages();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerMarkSeen();
+    });
   }
 
   @override
   void dispose() {
+    BabesClubChatWidget.isChatOpen = false;
+    FFAppState().isBabesChatOpen = false;
     _liveMessagesSub?.cancel();
     _roomSub?.cancel();
     _memberSub?.cancel();
+    _clubMembersSub?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _textController.dispose();
@@ -291,7 +345,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
       final restrictSnap = await FirebaseFirestore.instance
           .collection('chat_member_restrictions')
           .where('user_ref', isEqualTo: userRef)
-          .where('room_id', isEqualTo: widget.roomId)
+          .where('room_id', isEqualTo: _roomDocRef.id)
           .limit(1)
           .get();
 
@@ -302,7 +356,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     } catch (_) {}
   }
 
-  /// Listen to room metadata (member count, room name, etc.)
+  /// Listen to room metadata (room name, avatar, etc.)
   void _initRoomMeta() {
     _roomSub = _roomDocRef.snapshots().listen((snap) {
       if (!mounted) return;
@@ -310,9 +364,12 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         final data = snap.data() as Map<String, dynamic>?;
         if (data != null) {
           setState(() {
-            _roomName = data['name'] ?? 'Babes Club';
-            _memberCount = (data['member_count'] as num?)?.toInt() ?? 2400;
+            _roomName = data['name'] ?? 'babes club';
             _roomAvatar = data['avatar_url'] as String?;
+            final docCount = (data['member_count'] as num?)?.toInt();
+            if (docCount != null && docCount != 2400 && _memberCount == 0) {
+              _memberCount = docCount;
+            }
           });
         }
       } else {
@@ -320,12 +377,62 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         _roomDocRef.set({
           'name': 'Babes Club',
           'description': 'Private Close Friends Community Chat ♡',
-          'member_count': 2400,
+          'member_count': _memberCount,
           'created_at': FieldValue.serverTimestamp(),
           'active': true,
         }, SetOptions(merge: true));
       }
     });
+  }
+
+  /// Listen to real active member count from club_members collection
+  void _initClubMembersCount() {
+    _fetchRealMemberCount();
+
+    _clubMembersSub?.cancel();
+    _clubMembersSub = queryClubMembersRecord(
+      queryBuilder: (q) => q.where('is_active', isEqualTo: true),
+    ).listen((members) {
+      if (!mounted) return;
+      setState(() {
+        _memberCount = members.length;
+      });
+      _roomDocRef.update({'member_count': members.length}).catchError((_) {});
+    }, onError: (_) {
+      _clubMembersSub = queryClubMembersRecord().listen((members) {
+        if (!mounted) return;
+        setState(() {
+          _memberCount = members.length;
+        });
+      }, onError: (_) {});
+    });
+  }
+
+  Future<void> _fetchRealMemberCount() async {
+    try {
+      final activeCount = await queryClubMembersRecordCount(
+        queryBuilder: (q) => q.where('is_active', isEqualTo: true),
+      );
+      if (activeCount > 0) {
+        if (!mounted) return;
+        setState(() => _memberCount = activeCount);
+        _roomDocRef.update({'member_count': activeCount}).catchError((_) {});
+        return;
+      }
+
+      final totalCount = await queryClubMembersRecordCount();
+      if (!mounted) return;
+      setState(() => _memberCount = totalCount);
+      if (totalCount > 0) {
+        _roomDocRef.update({'member_count': totalCount}).catchError((_) {});
+      }
+    } catch (_) {
+      try {
+        final totalCount = await queryClubMembersRecordCount();
+        if (!mounted) return;
+        setState(() => _memberCount = totalCount);
+      } catch (_) {}
+    }
   }
 
   /// Listen to the latest 40 messages in real-time
@@ -350,12 +457,43 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
           _hasMoreOlder = false;
         }
       });
+      _checkAndMarkUnseenMessages();
     }, onError: (err) {
       if (!mounted) return;
       setState(() {
         _isLoadingInitial = false;
       });
     });
+  }
+
+  bool _isMarkingSeen = false;
+
+  void _checkAndMarkUnseenMessages() {
+    final userRef = currentUserReference;
+    if (userRef == null || _isMarkingSeen) return;
+
+    if (_liveDocs.isNotEmpty) {
+      final newestData = _liveDocs.first.data() as Map<String, dynamic>?;
+      if (newestData != null) {
+        final seenBy = newestData['message_seen_by'];
+        if (newestData['user_ref'] != userRef &&
+            (seenBy is! List || !seenBy.contains(userRef))) {
+          _triggerMarkSeen();
+        }
+      }
+    }
+  }
+
+  Future<void> _triggerMarkSeen() async {
+    final userRef = currentUserReference;
+    if (userRef == null || _isMarkingSeen) return;
+    _isMarkingSeen = true;
+    try {
+      await markClubMessagesAsSeen(_roomDocRef, userRef);
+    } catch (_) {
+    } finally {
+      _isMarkingSeen = false;
+    }
   }
 
   /// Scroll listener for infinite scroll pagination
@@ -444,44 +582,67 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     return DateFormat('h:mm a').format(date);
   }
 
-  /// Pick image from camera or gallery
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source,
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 82,
-      );
+  /// Check if two timestamps are on the same calendar day
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 
-      if (picked == null) return;
-      final bytes = await picked.readAsBytes();
+  /// Date header text matching the Yes Gurl community & chat design
+  String _getDateHeaderText(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(date.year, date.month, date.day);
 
-      setState(() {
-        _selectedImageBytes = bytes;
-        _selectedImageFilename = picked.name;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not pick image: $e'),
-          backgroundColor: FlutterFlowTheme.of(context).error,
-        ),
-      );
+    final difference = today.difference(messageDate).inDays;
+
+    if (difference == 0) {
+      return 'TODAY';
+    } else if (difference == 1) {
+      return 'YESTERDAY';
+    } else if (difference < 7) {
+      return DateFormat('EEEE').format(date).toUpperCase();
+    } else if (date.year == now.year) {
+      return DateFormat('MMMM d').format(date).toUpperCase();
+    } else {
+      return DateFormat('MMMM d, yyyy').format(date).toUpperCase();
     }
+  }
+
+  /// Date divider pill matching Yes Gurl chat screens (Screen 7 / chat_messages_widget)
+  Widget _buildDateDivider(DateTime date) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).primary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          _getDateHeaderText(date),
+          style: TextStyle(
+            fontSize: 12,
+            color: FlutterFlowTheme.of(context).primaryText,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
   }
 
   /// Send message
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty && _selectedImageBytes == null) return;
+    if (text.isEmpty && _selectedImageBytes == null && imagePath.isEmpty) {
+      return;
+    }
     if (_isSending) return;
 
     final userRef = currentUserReference;
     if (userRef == null) return;
 
-    setState(() {
+    safeSetState(() {
       _isSending = true;
     });
 
@@ -490,39 +651,34 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
       String? storagePath;
       DateTime? imageExpiresAt;
 
-      // Upload image to Firebase Storage if selected
-      if (_selectedImageBytes != null) {
+      // Check if image was pre-uploaded through FlutterFlow pipeline or needs upload
+      if (imagePath.isNotEmpty) {
+        imageUrl = imagePath;
+        imageExpiresAt = DateTime.now().add(const Duration(hours: 24));
+      } else if (_selectedImageBytes != null) {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         storagePath = 'chat_images/${userRef.id}/img_$timestamp.jpg';
         imageUrl = await uploadData(storagePath, _selectedImageBytes!);
-
         // Image expires after 24 hours
         imageExpiresAt = DateTime.now().add(const Duration(hours: 24));
       }
 
-      final senderName = currentUserDisplayName.isNotEmpty
-          ? currentUserDisplayName
-          : 'Babes Member';
-      final senderPhoto = currentUserPhoto;
-
       final messageData = <String, dynamic>{
         'user_ref': userRef,
-        'sender_name': senderName,
-        'sender_photo': senderPhoto,
         'text': text,
         'image_url': imageUrl,
-        'image_storage_path': storagePath,
         'image_expires_at':
             imageExpiresAt != null ? Timestamp.fromDate(imageExpiresAt) : null,
         'created_at': FieldValue.serverTimestamp(),
-        'reply_to_id': _replyingToDocId,
+        'reply_message_ref': _replyingToMessageRef,
+        'reply_user_ref': _replyingToUserRef,
         'reply_to_text': _replyingToMessage?['text'] as String?,
-        'reply_to_sender_name': _replyingToMessage?['sender_name'] as String?,
         'reactions': <String, int>{},
         'reaction_users': <String, dynamic>{},
         'deleted_at': null,
         'deleted_by': null,
         'is_removed_by_admin': false,
+        'message_seen_by': [userRef],
       };
 
       await _messagesCollection.add(messageData);
@@ -532,16 +688,20 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         'last_message':
             text.isNotEmpty ? text : (imageUrl != null ? '📷 Photo' : ''),
         'last_message_time': FieldValue.serverTimestamp(),
-        'last_message_sender': senderName,
+        'last_message_user': userRef,
       });
 
       // Clear input and state
       _textController.clear();
-      setState(() {
+      safeSetState(() {
         _selectedImageBytes = null;
         _selectedImageFilename = null;
+        imagePath = '';
+        uploadedFileUrl = '';
+        uploadedLocalFile = FFUploadedFile(bytes: Uint8List.fromList([]));
         _replyingToMessage = null;
-        _replyingToDocId = null;
+        _replyingToMessageRef = null;
+        _replyingToUserRef = null;
       });
 
       // Scroll to bottom (top in reverse ListView)
@@ -553,15 +713,17 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send message: $e'),
-          backgroundColor: FlutterFlowTheme.of(context).error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send message: $e'),
+            backgroundColor: FlutterFlowTheme.of(context).error,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           _isSending = false;
         });
       }
@@ -572,7 +734,6 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   Future<void> _toggleReaction(DocumentSnapshot doc, String emoji) async {
     final userRef = currentUserReference;
     if (userRef == null) return;
-    final uid = userRef.id;
 
     final data = doc.data() as Map<String, dynamic>? ?? {};
     final reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
@@ -583,9 +744,19 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         List<dynamic>.from(reactionUsers[emoji] ?? []);
     final int currentCount = (reactions[emoji] as num?)?.toInt() ?? 0;
 
-    if (usersForEmoji.contains(uid)) {
+    final bool userHasReacted = usersForEmoji.any((u) =>
+        u == userRef ||
+        (u is DocumentReference && u.id == userRef.id) ||
+        u == userRef.id ||
+        u == userRef.path);
+
+    if (userHasReacted) {
       // Remove reaction
-      usersForEmoji.remove(uid);
+      usersForEmoji.removeWhere((u) =>
+          u == userRef ||
+          (u is DocumentReference && u.id == userRef.id) ||
+          u == userRef.id ||
+          u == userRef.path);
       final newCount = currentCount > 1 ? currentCount - 1 : 0;
       if (newCount == 0) {
         reactions.remove(emoji);
@@ -595,8 +766,8 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         reactionUsers[emoji] = usersForEmoji;
       }
     } else {
-      // Add reaction
-      usersForEmoji.add(uid);
+      // Add reaction as DocumentReference (store reference only, no string ID)
+      usersForEmoji.add(userRef);
       reactions[emoji] = currentCount + 1;
       reactionUsers[emoji] = usersForEmoji;
     }
@@ -654,34 +825,190 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         'image_url': null,
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete message: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not delete message: $e')),
+        );
+      }
     }
   }
 
-  /// Report message
-  Future<void> _reportMessage(DocumentSnapshot doc) async {
+  /// Show report reasons dialog matching the style of MessagereportWidget in other modules
+  void _showReportDialog(DocumentSnapshot doc) {
+    const reasons = [
+      'fake profile',
+      'inappropriate content',
+      'spam, scam or advertising',
+      'underage',
+      'abusive behavior',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final theme = FlutterFlowTheme.of(context);
+        return Dialog(
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20.0),
+          backgroundColor: Colors.transparent,
+          alignment: AlignmentDirectional.center,
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: theme.secondaryBackground,
+              borderRadius: BorderRadius.circular(40.0),
+            ),
+            child: Padding(
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(15.0, 30.0, 15.0, 30.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'report?',
+                    textAlign: TextAlign.center,
+                    style: theme.displaySmall.override(
+                      fontFamily: theme.displaySmallFamily,
+                      fontSize: 27.0,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                      useGoogleFonts: !theme.displaySmallIsCustom,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        0.0, 10.0, 0.0, 16.0),
+                    child: Text(
+                      'she won\'t know she\'s been reported and blocked',
+                      textAlign: TextAlign.center,
+                      style: theme.bodyMedium.override(
+                        fontFamily: theme.bodyMediumFamily,
+                        letterSpacing: 0.0,
+                        useGoogleFonts: !theme.bodyMediumIsCustom,
+                      ),
+                    ),
+                  ),
+                  ...reasons.map((reason) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14.0),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _submitReport(doc, reason);
+                        },
+                        borderRadius: BorderRadius.circular(20.0),
+                        child: Container(
+                          width: double.infinity,
+                          height: 40.0,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: theme.secondaryBackground,
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(
+                              color: theme.alternate,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Text(
+                            reason,
+                            style: theme.bodyMedium.override(
+                              fontFamily: theme.bodyMediumFamily,
+                              letterSpacing: 0.0,
+                              useGoogleFonts: !theme.bodyMediumIsCustom,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Submit report to 'report' collection like other modules, update message and user records, and notify admin
+  Future<void> _submitReport(DocumentSnapshot doc, String reason) async {
     final userRef = currentUserReference;
     if (userRef == null) return;
 
+    final data = doc.data() as Map<String, dynamic>?;
+    final reportedUserRef = data?['user_ref'] as DocumentReference?;
+    final messageText = (data?['text'] as String?)?.trim() ?? '';
+    final messageSnippet = messageText.isNotEmpty
+        ? (messageText.length > 50
+            ? '${messageText.substring(0, 50)}...'
+            : messageText)
+        : (data?['image_url'] != null ? 'Photo' : 'Babes Club message');
+
     try {
-      await FirebaseFirestore.instance.collection('chat_reports').add({
-        'message_ref': doc.reference,
-        'reported_by': userRef,
-        'room_id': widget.roomId,
-        'created_at': FieldValue.serverTimestamp(),
-        'status': 'pending',
-      });
+      // 1. Fetch reported user's info for the admin notification
+      UserRecord? reportedUser;
+      if (reportedUserRef != null) {
+        reportedUser = await _fetchUserRecord(reportedUserRef);
+      }
+      final reportedUserName = reportedUser?.displayName.isNotEmpty == true
+          ? reportedUser!.displayName
+          : 'User';
+      final reportedUserUid = reportedUser?.uid.isNotEmpty == true
+          ? reportedUser!.uid
+          : reportedUserRef?.id ?? '';
+
+      // 2. Update message doc with message_report list (like other modules)
+      await doc.reference.update({
+        'message_report': FieldValue.arrayUnion([userRef]),
+      }).catchError((_) {});
+
+      // 3. Update reporter's user doc with message_reports list (like other modules)
+      await userRef.update({
+        'message_reports': FieldValue.arrayUnion([doc.reference]),
+      }).catchError((_) {});
+
+      // 4. Save to ReportRecord collection ('report') matching other modules
+      await ReportRecord.collection.doc().set(
+            createReportRecordData(
+              userReference: userRef,
+              title: reason,
+              createdTime: getCurrentTimestamp,
+              reportUser: reportedUserRef,
+              clubMessage: doc.reference,
+            ),
+          );
+
+      // 5. Send admin notification to NotificationRecord collection ('notification')
+      await NotificationRecord.collection.doc().set(
+            createNotificationRecordData(
+              title: 'Report: Babes Club Message',
+              description:
+                  '$currentUserDisplayName ($currentUserUid) reported $reportedUserName ($reportedUserUid) through Babes Club message "$messageSnippet" ($reason) on Babes Club ${dateTimeFormat("yMMMd", getCurrentTimestamp)}',
+              sentBy: userRef,
+              user: userRef,
+              sentAt: getCurrentTimestamp,
+              notificationType: 'report',
+              chat: _roomDocRef,
+              forAdmin: true,
+            ),
+          );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Thank you. Message reported to moderators.'),
+          content: Text(
+            'You have reported this message. We will review this within 24 hours and take action if necessary.',
+            style: TextStyle(
+              color: FlutterFlowTheme.of(context).primaryText,
+            ),
+          ),
+          duration: const Duration(milliseconds: 4000),
           backgroundColor: FlutterFlowTheme.of(context).secondary,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[BabesClubChatWidget] Error submitting report: $e');
+    }
   }
 
   /// Open full-screen image viewer with zoom & pan
@@ -779,18 +1106,39 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                   ),
             ),
             const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).primary.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${_formatMemberCount(_memberCount)} active babes ♡',
-                style: TextStyle(
-                  color: FlutterFlowTheme.of(context).primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+            InkWell(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _openClubMembersScreen();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context)
+                      .primary
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${_formatMemberCount(_memberCount)} active ${_memberCount == 1 ? 'babe' : 'babes'} ♡',
+                      style: TextStyle(
+                        color: FlutterFlowTheme.of(context).primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 11,
+                      color: FlutterFlowTheme.of(context).primary,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -828,9 +1176,42 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               icon: Icons.verified_user_outlined,
               title: 'Active Members Only',
               desc:
-                  'Access remains exclusively active while your Babes Club membership is valid.',
+                  'Access remains exclusively active while your babes club membership is valid.',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: FlutterFlowTheme.of(context).primary,
+                    width: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _openClubMembersScreen();
+                },
+                icon: Icon(
+                  Icons.group_rounded,
+                  color: FlutterFlowTheme.of(context).primary,
+                  size: 20,
+                ),
+                label: Text(
+                  'View Club Members (${_formatMemberCount(_memberCount)})',
+                  style: TextStyle(
+                    color: FlutterFlowTheme.of(context).primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -954,15 +1335,27 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
             // Reply directly
             ListTile(
               leading: Icon(
-                Icons.reply_rounded,
+                Icons.reply_sharp,
                 color: FlutterFlowTheme.of(context).primary,
+                size: 24,
               ),
-              title: const Text('Reply directly'),
+              title: Text(
+                'Reply',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15.0,
+                      letterSpacing: 0.0,
+                      useGoogleFonts:
+                          !FlutterFlowTheme.of(context).bodyMediumIsCustom,
+                    ),
+              ),
               onTap: () {
                 Navigator.of(ctx).pop();
-                setState(() {
+                safeSetState(() {
                   _replyingToMessage = data;
-                  _replyingToDocId = doc.id;
+                  _replyingToMessageRef = doc.reference;
+                  _replyingToUserRef = data['user_ref'] as DocumentReference?;
                 });
                 _focusNode.requestFocus();
               },
@@ -993,7 +1386,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                 title: const Text('Report message'),
                 onTap: () {
                   Navigator.of(ctx).pop();
-                  _reportMessage(doc);
+                  _showReportDialog(doc);
                 },
               ),
           ],
@@ -1024,15 +1417,14 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     return Container(
       width: widget.width ?? double.infinity,
       height: widget.height ?? double.infinity,
-      color: const Color(0xFFFDF7F8), // Soft intimate close-friends pink hue
       child: SafeArea(
         child: Column(
           children: [
             _buildTopNavBar(),
-            _buildRoomCard(),
             Expanded(child: _buildMessagesFeed()),
             if (_replyingToMessage != null) _buildReplyPreviewBar(),
-            if (_selectedImageBytes != null) _buildSelectedImageBar(),
+            if (_selectedImageBytes != null || imagePath.isNotEmpty)
+              _buildSelectedImageBar(),
             _buildBottomInputBar(),
           ],
         ),
@@ -1060,119 +1452,88 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               }
             },
           ),
+          // Babes Club Avatar, Title & Member Count (Clickable to open ClubMembersWidget)
           Expanded(
-            child: Text(
-              'Babes Club Chat',
-              textAlign: TextAlign.center,
-              style: FlutterFlowTheme.of(context).headlineSmall.override(
-                    fontFamily:
-                        FlutterFlowTheme.of(context).headlineSmallFamily,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.0,
-                  ),
-            ),
-          ),
-          const SizedBox(width: 44), // balance back button
-        ],
-      ),
-    );
-  }
-
-  /// Room Card (Matching AI Mockup Screen 7)
-  Widget _buildRoomCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: const Color(0xFFFFE3E8),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x10FF5A79),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Small left arrow indicator
-          Icon(
-            Icons.chevron_left_rounded,
-            color: FlutterFlowTheme.of(context).secondaryText.withOpacity(0.6),
-            size: 20,
-          ),
-          const SizedBox(width: 6),
-          // Babes Club Avatar circle
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFE99AB), Color(0xFFFF6D8A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0x30FE99AB),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: _roomAvatar != null && _roomAvatar!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: CachedNetworkImage(
-                        imageUrl: _roomAvatar!,
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.cover,
+            child: InkWell(
+              splashColor: Colors.transparent,
+              focusColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              onTap: _openClubMembersScreen,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFE99AB), Color(0xFFFF6D8A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    )
-                  : const Text(
-                      '👩🏼‍🤝‍👩🏻',
-                      style: TextStyle(fontSize: 22),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x30FE99AB),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Room Name & Member Count Counter
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _roomName,
-                  style: FlutterFlowTheme.of(context).bodyLarge.override(
-                        fontFamily:
-                            FlutterFlowTheme.of(context).bodyLargeFamily,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        letterSpacing: 0.0,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${_formatMemberCount(_memberCount)} members',
-                  style: FlutterFlowTheme.of(context).bodySmall.override(
-                        fontFamily:
-                            FlutterFlowTheme.of(context).bodySmallFamily,
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        fontSize: 12,
-                        letterSpacing: 0.0,
-                      ),
-                ),
-              ],
+                    child: Center(
+                      child: _roomAvatar != null && _roomAvatar!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(22),
+                              child: CachedNetworkImage(
+                                imageUrl: _roomAvatar!,
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Text(
+                              '👩🏼‍🤝‍👩🏻',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Room Name & Member Count Counter
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _roomName,
+                          style:
+                              FlutterFlowTheme.of(context).bodyLarge.override(
+                                    fontFamily: FlutterFlowTheme.of(context)
+                                        .bodyLargeFamily,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    letterSpacing: 0.0,
+                                  ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${_formatMemberCount(_memberCount)} ${_memberCount == 1 ? 'member' : 'members'}',
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: FlutterFlowTheme.of(context)
+                                    .bodySmallFamily,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: 12,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           // Info / Guidelines Sparkle Icon
@@ -1240,7 +1601,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Your intimate Babes Club circle is waiting!',
+              'Your intimate babes club circle is waiting!',
               style: FlutterFlowTheme.of(context).bodySmall.override(
                     fontFamily: FlutterFlowTheme.of(context).bodySmallFamily,
                     color: FlutterFlowTheme.of(context).secondaryText,
@@ -1271,17 +1632,50 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         }
 
         final doc = docs[index];
-        return _buildMessageItem(doc);
+        final data = doc.data() as Map<String, dynamic>? ?? {};
+        final createdAt =
+            (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+        bool showDateHeader = false;
+        if (index == docs.length - 1) {
+          showDateHeader = true;
+        } else {
+          final olderDoc = docs[index + 1];
+          final olderData = olderDoc.data() as Map<String, dynamic>? ?? {};
+          final olderCreatedAt =
+              (olderData['created_at'] as Timestamp?)?.toDate();
+          if (olderCreatedAt != null) {
+            if (!_isSameDay(createdAt, olderCreatedAt)) {
+              showDateHeader = true;
+            }
+          } else {
+            showDateHeader = true;
+          }
+        }
+
+        final messageItem = _buildMessageItem(doc);
+        if (showDateHeader) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildDateDivider(createdAt),
+              messageItem,
+            ],
+          );
+        }
+        return messageItem;
       },
     );
   }
 
-  /// Single Message Bubble Item
+  /// Single Message Bubble Item (Matching MessageBoxWidget & MessageCardWidget)
   Widget _buildMessageItem(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final userRef = currentUserReference;
-    final isMe =
-        userRef != null && (data['user_ref'] as DocumentReference?) == userRef;
+    final messageUserRef = data['user_ref'] as DocumentReference?;
+    final isMe = currentUserReference != null &&
+        (messageUserRef == currentUserReference ||
+            messageUserRef?.id == currentUserReference?.id);
     final isDeleted = data['deleted_at'] != null;
     final isRemovedByAdmin = data['is_removed_by_admin'] == true ||
         data['deleted_by_role'] == 'admin';
@@ -1290,12 +1684,43 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     final imageUrl = data['image_url'] as String?;
     final imageExpiresAt = (data['image_expires_at'] as Timestamp?)?.toDate();
     final createdAt = (data['created_at'] as Timestamp?)?.toDate();
-    final senderName = data['sender_name'] as String? ?? 'Babe';
-    final senderPhoto = data['sender_photo'] as String?;
 
-    // In-line reply quote metadata
+    // Fetch sender user data from user doc
+    UserRecord? senderUser = messageUserRef != null
+        ? (_userDocCache[messageUserRef.path] ??
+            (isMe ? currentUserDocument : null))
+        : null;
+    if (senderUser == null && messageUserRef != null) {
+      _fetchUserRecord(messageUserRef);
+    }
+
+    final String senderName = (senderUser?.displayName.isNotEmpty == true)
+        ? senderUser!.displayName
+        : (data['sender_name'] as String? ?? 'Babe');
+
+    final String? senderPhoto = (senderUser?.displayImage.isNotEmpty == true)
+        ? senderUser!.displayImage
+        : (senderUser?.photoUrl.isNotEmpty == true
+            ? senderUser!.photoUrl
+            : (data['sender_photo'] as String?));
+
+    // Reply data & references (fetch replied user from doc)
     final replyText = data['reply_to_text'] as String?;
-    final replySender = data['reply_to_sender_name'] as String?;
+    final replyUserRef = data['reply_user_ref'] as DocumentReference?;
+
+    UserRecord? replyUser = replyUserRef != null
+        ? (_userDocCache[replyUserRef.path] ??
+            (replyUserRef == currentUserReference ? currentUserDocument : null))
+        : null;
+    if (replyUser == null && replyUserRef != null) {
+      _fetchUserRecord(replyUserRef);
+    }
+
+    final String replySender = (replyUserRef == currentUserReference)
+        ? 'You'
+        : (replyUser?.displayName.isNotEmpty == true
+            ? replyUser!.displayName
+            : (data['reply_to_sender_name'] as String? ?? 'Babe'));
 
     // Reactions map
     final reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
@@ -1307,18 +1732,31 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         imageExpiresAt != null && DateTime.now().isAfter(imageExpiresAt);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: GestureDetector(
         onLongPress: () => _showMessageOptions(doc),
+        onDoubleTap: isDeleted
+            ? null
+            : () {
+                safeSetState(() {
+                  _replyingToMessage = data;
+                  _replyingToMessageRef = doc.reference;
+                  _replyingToUserRef = messageUserRef;
+                });
+                _focusNode.requestFocus();
+              },
         child: Row(
           mainAxisAlignment:
               isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Other user avatar (on left)
+            // Other user avatar (on left for incoming messages)
             if (!isMe) ...[
-              _buildSenderAvatar(senderPhoto, senderName),
-              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 18.0),
+                child: _buildSenderAvatar(senderPhoto, senderName),
+              ),
+              const SizedBox(width: 8.0),
             ],
 
             Flexible(
@@ -1326,126 +1764,225 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                 crossAxisAlignment:
                     isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                  // Sender name (only for incoming messages)
+                  // Sender name (only for incoming messages, matching MessageCardWidget)
                   if (!isMe)
                     Padding(
-                      padding: const EdgeInsets.only(left: 6, bottom: 4),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          10.0, 0.0, 0.0, 4.0),
                       child: Text(
                         senderName,
-                        style: TextStyle(
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily:
+                                  FlutterFlowTheme.of(context).bodyMediumFamily,
+                              letterSpacing: 0.0,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.0,
+                              useGoogleFonts: !FlutterFlowTheme.of(context)
+                                  .bodyMediumIsCustom,
+                            ),
                       ),
                     ),
 
-                  // Message Bubble
-                  Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.72,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: isMe
-                          ? const LinearGradient(
-                              colors: [Color(0xFFFE99AB), Color(0xFFFF728D)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                  // Message Bubble (Sleek 16px radius for replies/images, 40px pill for pure text)
+                  Builder(
+                    builder: (context) {
+                      final bool hasReply =
+                          replyText != null && replyText.isNotEmpty;
+                      final bool hasImage =
+                          imageUrl != null && imageUrl.isNotEmpty;
+                      final bool hasText = text.isNotEmpty;
+                      final bool isSpecialBubble = hasReply || hasImage;
+
+                      final BorderRadius bubbleRadius = isSpecialBubble
+                          ? BorderRadius.only(
+                              topLeft: Radius.circular(isMe ? 16.0 : 4.0),
+                              topRight: Radius.circular(isMe ? 4.0 : 16.0),
+                              bottomLeft: const Radius.circular(16.0),
+                              bottomRight: const Radius.circular(16.0),
                             )
-                          : null,
-                      color: isMe ? null : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(20),
-                        topRight: const Radius.circular(20),
-                        bottomLeft: Radius.circular(isMe ? 20 : 4),
-                        bottomRight: Radius.circular(isMe ? 4 : 20),
-                      ),
-                      border: isMe
-                          ? null
-                          : Border.all(
-                              color: const Color(0xFFFFE8EC), width: 1.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isMe
-                              ? const Color(0x28FE99AB)
-                              : const Color(0x0A000000),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          : BorderRadius.only(
+                              topLeft: Radius.circular(isMe ? 40.0 : 3.0),
+                              topRight: Radius.circular(isMe ? 3.0 : 40.0),
+                              bottomLeft: const Radius.circular(40.0),
+                              bottomRight: const Radius.circular(40.0),
+                            );
+
+                      final EdgeInsetsDirectional bubblePadding = isDeleted
+                          ? const EdgeInsetsDirectional.fromSTEB(
+                              14.0, 10.0, 14.0, 10.0)
+                          : (hasImage && !hasReply)
+                              ? const EdgeInsetsDirectional.fromSTEB(
+                                  0.0, 0.0, 0.0, 0.0)
+                              : hasReply
+                                  ? const EdgeInsetsDirectional.fromSTEB(
+                                      8.0, 8.0, 8.0, 8.0)
+                                  : const EdgeInsetsDirectional.fromSTEB(
+                                      14.0, 10.0, 14.0, 10.0);
+
+                      return Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
                         ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        // Quoted Reply Preview (if any)
-                        if (replyText != null && replyText.isNotEmpty)
-                          _buildInBubbleReplyQuote(
-                            replySender ?? 'Babe',
-                            replyText,
-                            isMe,
-                          ),
-
-                        // Deleted / Moderated Message State
-                        if (isDeleted)
-                          Text(
-                            isRemovedByAdmin
-                                ? 'message removed by admin'
-                                : 'Message deleted',
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
-                              color: isMe
-                                  ? Colors.white.withOpacity(0.7)
-                                  : Colors.grey.shade500,
-                              fontSize: 13.5,
-                            ),
-                          )
-                        else ...[
-                          // Image Content (with 24h expiry handling)
-                          if (imageUrl != null && imageUrl.isNotEmpty)
-                            _buildBubbleImage(
-                              imageUrl,
-                              isImageExpired,
-                              isMe,
-                            ),
-
-                          // Text Content
-                          if (text.isNotEmpty)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top: (imageUrl != null) ? 8.0 : 0.0,
+                        decoration: BoxDecoration(
+                          color: isMe
+                              ? FlutterFlowTheme.of(context).secondary
+                              : const Color(0xF0E4E4E4),
+                          borderRadius: bubbleRadius,
+                        ),
+                        padding: bubblePadding,
+                        child: Column(
+                          crossAxisAlignment: isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            // Quoted Reply Card Preview
+                            if (hasReply)
+                              _buildInBubbleReplyQuote(
+                                replySender,
+                                replyText,
+                                isMe,
                               ),
-                              child: Text(
-                                text,
+
+                            // Deleted / Moderated Message State
+                            if (isDeleted)
+                              Text(
+                                isRemovedByAdmin
+                                    ? 'message removed by admin'
+                                    : 'Message deleted',
                                 style: TextStyle(
+                                  fontStyle: FontStyle.italic,
                                   color: isMe
-                                      ? Colors.white
-                                      : FlutterFlowTheme.of(context)
-                                          .primaryText,
-                                  fontSize: 15,
-                                  height: 1.35,
+                                      ? FlutterFlowTheme.of(context).primaryText
+                                      : Colors.black54,
+                                  fontSize: 13.5,
                                 ),
-                              ),
-                            ),
-                        ],
+                              )
+                            else ...[
+                              // Image Content (with 24h expiry handling)
+                              if (hasImage)
+                                _buildBubbleImage(
+                                  imageUrl,
+                                  isImageExpired,
+                                  isMe,
+                                  borderRadius: hasReply
+                                      ? BorderRadius.circular(10.0)
+                                      : hasText
+                                          ? BorderRadius.only(
+                                              topLeft: bubbleRadius.topLeft,
+                                              topRight: bubbleRadius.topRight,
+                                            )
+                                          : bubbleRadius,
+                                ),
 
-                        const SizedBox(height: 4),
+                              // Text Content
+                              if (hasText)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    top: hasImage
+                                        ? 8.0
+                                        : hasReply
+                                            ? 6.0
+                                            : 0.0,
+                                    left: (hasImage && !hasReply)
+                                        ? 14.0
+                                        : (hasReply ? 4.0 : 0.0),
+                                    right: (hasImage && !hasReply)
+                                        ? 14.0
+                                        : (hasReply ? 4.0 : 0.0),
+                                    bottom: (hasImage && !hasReply)
+                                        ? 10.0
+                                        : (hasReply ? 2.0 : 0.0),
+                                  ),
+                                  child: ChatMessageText(
+                                    message: text,
+                                    fontSize: 14.0,
+                                    fontColor: isMe
+                                        ? FlutterFlowTheme.of(context)
+                                            .primaryText
+                                        : Colors.black,
+                                  ),
+                                ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
 
-                        // Timestamp
+                  // Timestamp & Quick Reply below bubble (Matching MessageBoxWidget & MessageCardWidget)
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                      isMe ? 0.0 : 12.0,
+                      3.0,
+                      isMe ? 12.0 : 0.0,
+                      0.0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
                           _formatMessageTime(createdAt),
-                          style: TextStyle(
-                            color: isMe
-                                ? Colors.white.withOpacity(0.75)
-                                : FlutterFlowTheme.of(context).secondaryText,
-                            fontSize: 10.5,
-                          ),
+                          textAlign: isMe ? TextAlign.end : TextAlign.start,
+                          style: FlutterFlowTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                fontFamily: FlutterFlowTheme.of(context)
+                                    .bodyMediumFamily,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: 11.5,
+                                letterSpacing: 0.0,
+                                useGoogleFonts: !FlutterFlowTheme.of(context)
+                                    .bodyMediumIsCustom,
+                              ),
                         ),
+                        if (!isDeleted) ...[
+                          const SizedBox(width: 8.0),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12.0),
+                            onTap: () {
+                              safeSetState(() {
+                                _replyingToMessage = data;
+                                _replyingToMessageRef = doc.reference;
+                                _replyingToUserRef = messageUserRef;
+                              });
+                              _focusNode.requestFocus();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0, vertical: 2.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.reply_sharp,
+                                    size: 13.0,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                  ),
+                                  const SizedBox(width: 2.0),
+                                  Text(
+                                    'Reply',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodySmall
+                                        .override(
+                                          fontFamily:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodySmallFamily,
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                          fontSize: 11.0,
+                                          letterSpacing: 0.0,
+                                          useGoogleFonts:
+                                              !FlutterFlowTheme.of(context)
+                                                  .bodySmallIsCustom,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -1512,38 +2049,65 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     String quote,
     bool isMe,
   ) {
+    const accentColor = Color(0xFFD45668);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(8),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 2.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 7.0),
       decoration: BoxDecoration(
-        color: isMe ? Colors.white.withOpacity(0.2) : const Color(0xFFFFF0F3),
-        borderRadius: BorderRadius.circular(10),
-        border: Border(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.0),
+        border: const Border(
           left: BorderSide(
-            color: isMe ? Colors.white : const Color(0xFFFE99AB),
+            color: accentColor,
             width: 3.5,
           ),
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 3.0,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            sender,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 11.5,
-              color: isMe ? Colors.white : const Color(0xFFDC6874),
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.reply_rounded,
+                size: 14.0,
+                color: accentColor,
+              ),
+              const SizedBox(width: 4.0),
+              Flexible(
+                child: Text(
+                  sender,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: accentColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3.0),
           Text(
             quote,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: isMe ? Colors.white.withOpacity(0.9) : Colors.black87,
+            style: const TextStyle(
+              fontSize: 12.0,
+              height: 1.25,
+              color: Color(0xFF4A4A4A),
             ),
           ),
         ],
@@ -1555,16 +2119,18 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   Widget _buildBubbleImage(
     String imageUrl,
     bool isExpired,
-    bool isMe,
-  ) {
+    bool isMe, {
+    BorderRadius? borderRadius,
+  }) {
     if (isExpired) {
       return Container(
         width: 220,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color:
-              isMe ? Colors.white.withOpacity(0.18) : const Color(0xFFF9F1F3),
-          borderRadius: BorderRadius.circular(14),
+          color: isMe
+              ? Colors.white.withOpacity(0.5)
+              : Colors.white.withOpacity(0.9),
+          borderRadius: borderRadius ?? BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1572,17 +2138,18 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
             Icon(
               Icons.timer_off_outlined,
               size: 20,
-              color: isMe ? Colors.white70 : const Color(0xFFDC6874),
+              color: FlutterFlowTheme.of(context).primary,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Image expired after 24 hours 🌸',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: isMe ? Colors.white : Colors.black54,
-                ),
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: isMe
+                        ? FlutterFlowTheme.of(context).secondaryText
+                        : Color(0xFF4A4A4A)),
               ),
             ),
           ],
@@ -1590,23 +2157,29 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
       );
     }
 
+    final double maxW = MediaQuery.sizeOf(context).width * 0.72;
+
     return GestureDetector(
       onTap: () => _openImageViewer(imageUrl),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: borderRadius ?? BorderRadius.circular(14),
         child: CachedNetworkImage(
           imageUrl: imageUrl,
-          width: 230,
-          height: 170,
+          width: maxW,
+          height: 200,
           fit: BoxFit.cover,
           placeholder: (context, url) => Shimmer.fromColors(
             baseColor: Colors.grey.shade200,
             highlightColor: Colors.grey.shade100,
-            child: Container(width: 230, height: 170, color: Colors.white),
+            child: Container(
+              width: maxW,
+              height: 200,
+              color: Colors.white,
+            ),
           ),
           errorWidget: (context, url, error) => Container(
-            width: 230,
-            height: 120,
+            width: maxW,
+            height: 130,
             color: Colors.grey.shade200,
             child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
           ),
@@ -1621,7 +2194,8 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     Map<String, dynamic> reactions,
     Map<String, dynamic> reactionUsers,
   ) {
-    final currentUid = currentUserReference?.id;
+    final currentRef = currentUserReference;
+    final currentUid = currentRef?.id;
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
@@ -1634,8 +2208,12 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
           if (count <= 0) return const SizedBox.shrink();
 
           final usersList = List<dynamic>.from(reactionUsers[emoji] ?? []);
-          final userHasReacted =
-              currentUid != null && usersList.contains(currentUid);
+          final userHasReacted = currentRef != null &&
+              usersList.any((u) =>
+                  u == currentRef ||
+                  (u is DocumentReference && u.id == currentUid) ||
+                  u == currentUid ||
+                  u == currentRef.path);
 
           return GestureDetector(
             onTap: () => _toggleReaction(doc, emoji),
@@ -1684,21 +2262,58 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
 
   /// Reply preview bar shown right above the input field
   Widget _buildReplyPreviewBar() {
-    final sender = _replyingToMessage?['sender_name'] as String? ?? 'Babe';
+    String sender = 'Babe';
+    if (_replyingToUserRef != null) {
+      if (_replyingToUserRef == currentUserReference) {
+        sender = 'You';
+      } else if (_userDocCache.containsKey(_replyingToUserRef!.path)) {
+        sender = _userDocCache[_replyingToUserRef!.path]!.displayName;
+      } else {
+        _fetchUserRecord(_replyingToUserRef);
+        sender = _replyingToMessage?['sender_name'] as String? ?? 'Babe';
+      }
+    } else if (_replyingToMessage?['sender_name'] != null) {
+      sender = _replyingToMessage!['sender_name'] as String;
+    }
     final text = _replyingToMessage?['text'] as String? ?? '';
+    final theme = FlutterFlowTheme.of(context);
+    const accentColor = Color(0xFFD45668);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+      padding: const EdgeInsets.fromLTRB(12.0, 8.0, 8.0, 8.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: const Color(0xFFFFE0E6), width: 1),
-          left:
-              BorderSide(color: FlutterFlowTheme.of(context).primary, width: 4),
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(
+          color: accentColor.withOpacity(0.3),
+          width: 1.0,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 8.0,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          Container(
+            width: 3.5,
+            height: 36.0,
+            decoration: BoxDecoration(
+              color: accentColor,
+              borderRadius: BorderRadius.circular(2.0),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          const Icon(
+            Icons.reply_rounded,
+            size: 20.0,
+            color: accentColor,
+          ),
+          const SizedBox(width: 8.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1706,33 +2321,48 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               children: [
                 Text(
                   'Replying to $sender',
-                  style: TextStyle(
+                  style: theme.bodyMedium.override(
+                    fontFamily: theme.bodyMediumFamily,
+                    color: accentColor,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12.5,
-                    color: FlutterFlowTheme.of(context).primary,
+                    fontSize: 13.0,
+                    letterSpacing: 0.0,
+                    useGoogleFonts: !theme.bodyMediumIsCustom,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 2.0),
                 Text(
                   text.isNotEmpty ? text : 'Photo',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: FlutterFlowTheme.of(context).secondaryText,
+                  style: theme.bodySmall.override(
+                    fontFamily: theme.bodySmallFamily,
+                    color: theme.secondaryText,
+                    fontSize: 12.0,
+                    letterSpacing: 0.0,
+                    useGoogleFonts: !theme.bodySmallIsCustom,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
-            onPressed: () {
-              setState(() {
+          InkWell(
+            borderRadius: BorderRadius.circular(20.0),
+            onTap: () {
+              safeSetState(() {
                 _replyingToMessage = null;
-                _replyingToDocId = null;
+                _replyingToMessageRef = null;
+                _replyingToUserRef = null;
               });
             },
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Icon(
+                Icons.close_rounded,
+                size: 20.0,
+                color: theme.secondaryText,
+              ),
+            ),
           ),
         ],
       ),
@@ -1741,6 +2371,11 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
 
   /// Selected image thumbnail bar before sending
   Widget _buildSelectedImageBar() {
+    final hasBytes =
+        _selectedImageBytes != null && _selectedImageBytes!.isNotEmpty;
+    final hasUrl = imagePath.isNotEmpty;
+    if (!hasBytes && !hasUrl) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.white,
@@ -1748,12 +2383,19 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.memory(
-              _selectedImageBytes!,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            ),
+            child: hasBytes
+                ? Image.memory(
+                    _selectedImageBytes!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  )
+                : Image.network(
+                    imagePath,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1761,7 +2403,10 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _selectedImageFilename ?? 'Photo selected',
+                  _selectedImageFilename ??
+                      ((uploadedLocalFile.name?.isNotEmpty == true)
+                          ? uploadedLocalFile.name!
+                          : 'Photo selected'),
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 13),
                   maxLines: 1,
@@ -1778,9 +2423,13 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
           IconButton(
             icon: const Icon(Icons.cancel, color: Colors.grey),
             onPressed: () {
-              setState(() {
+              safeSetState(() {
                 _selectedImageBytes = null;
                 _selectedImageFilename = null;
+                imagePath = '';
+                uploadedFileUrl = '';
+                uploadedLocalFile =
+                    FFUploadedFile(bytes: Uint8List.fromList([]));
               });
             },
           ),
@@ -1812,38 +2461,39 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
       );
     }
 
+// Generated code for this Container Widget...
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+        color: FlutterFlowTheme.of(context).secondaryBackground,
+        borderRadius: BorderRadius.circular(40),
         border: Border.all(
-          color: const Color(0xFFFFDCE3),
-          width: 1.2,
+          color: FlutterFlowTheme.of(context).alternate,
+          width: 2,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.max,
         children: [
-          // Camera / Attachment Icon button
           GestureDetector(
             onTap: () async {
               final selectedMedia = await selectMediaWithSourceBottomSheet(
                 context: context,
                 allowPhoto: true,
+                allowVideo: false,
+                pickerFontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
+                textColor: FlutterFlowTheme.of(context).primaryText,
+                backgroundColor:
+                    FlutterFlowTheme.of(context).secondaryBackground,
               );
+              if (!mounted) return;
               if (selectedMedia != null &&
                   selectedMedia.every(
                       (m) => validateFileFormat(m.storagePath, context))) {
+                safeSetState(() => isDataUploading = true);
                 var selectedUploadedFiles = <FFUploadedFile>[];
-
                 var downloadUrls = <String>[];
                 try {
                   showUploadMessage(
@@ -1871,13 +2521,20 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                       .map((u) => u!)
                       .toList();
                 } finally {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    safeSetState(() => isDataUploading = false);
+                  }
                 }
+                if (!mounted) return;
                 if (selectedUploadedFiles.length == selectedMedia.length &&
                     downloadUrls.length == selectedMedia.length) {
                   safeSetState(() {
-                    imagePath = selectedUploadedFiles.first;
+                    uploadedLocalFile = selectedUploadedFiles.first;
                     imagePath = downloadUrls.first;
+                    uploadedFileUrl = downloadUrls.first;
+                    _selectedImageBytes = selectedUploadedFiles.first.bytes;
+                    _selectedImageFilename = selectedUploadedFiles.first.name;
                   });
                   showUploadMessage(context, 'Success!');
                 } else {
@@ -1886,60 +2543,6 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                   return;
                 }
               }
-
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                builder: (ctx) => Container(
-                  decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFF0F3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.camera_alt_rounded,
-                            color: FlutterFlowTheme.of(context).primary,
-                          ),
-                        ),
-                        title: const Text('Take a photo'),
-                        onTap: () {
-                          Navigator.of(ctx).pop();
-                          _pickImage(ImageSource.camera);
-                        },
-                      ),
-                      ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFF0F3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.photo_library_rounded,
-                            color: FlutterFlowTheme.of(context).primary,
-                          ),
-                        ),
-                        title: const Text('Choose from gallery'),
-                        onTap: () {
-                          Navigator.of(ctx).pop();
-                          _pickImage(ImageSource.gallery);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
             },
             child: Container(
               margin: const EdgeInsets.only(left: 4),
@@ -1956,82 +2559,83 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               ),
             ),
           ),
-
           const SizedBox(width: 8),
-
-          // Message Input Field
           Expanded(
-            child: TextField(
-              controller: _textController,
-              focusNode: _focusNode,
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: null,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 15,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 10,
-                ),
-              ),
-              onSubmitted: (_) => _sendMessage(),
-            ),
-          ),
-
-          // Info / Guidelines quick toggle
-          IconButton(
-            icon: Icon(
-              Icons.info_outline_rounded,
-              color: Colors.grey.shade400,
-              size: 22,
-            ),
-            onPressed: _showRoomInfoSheet,
-          ),
-
-          // Send Button
-          GestureDetector(
-            onTap: _isSending ? null : _sendMessage,
-            child: Container(
-              margin: const EdgeInsets.only(right: 4),
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFE99AB), Color(0xFFFF6D8A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x35FE99AB),
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(15, 0, 8, 0),
+              child: Container(
+                width: 200,
+                child: TextFormField(
+                  controller: _textController,
+                  focusNode: _focusNode,
+                  onFieldSubmitted: (_) => _sendMessage(),
+                  onChanged: (_) => EasyDebounce.debounce(
+                    '_model.textController',
+                    Duration(milliseconds: 10),
+                    () => safeSetState(() {}),
                   ),
-                ],
-              ),
-              child: Center(
-                child: _isSending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                  autofocus: false,
+                  enabled: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  obscureText: false,
+                  decoration: InputDecoration(
+                    isDense: false,
+                    hintText: 'send a message',
+                    hintStyle: FlutterFlowTheme.of(context)
+                        .labelMedium
+                        .override(
+                          fontFamily:
+                              FlutterFlowTheme.of(context).labelMediumFamily,
+                          letterSpacing: 0.0,
+                          useGoogleFonts:
+                              !FlutterFlowTheme.of(context).labelMediumIsCustom,
                         ),
-                      )
-                    : const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 20,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                  ),
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily:
+                            FlutterFlowTheme.of(context).bodyMediumFamily,
+                        fontSize: 12,
+                        letterSpacing: 0.0,
+                        useGoogleFonts:
+                            !FlutterFlowTheme.of(context).bodyMediumIsCustom,
                       ),
+                  maxLines: 3,
+                  minLines: 1,
+                  cursorColor: FlutterFlowTheme.of(context).primaryText,
+                  enableInteractiveSelection: true,
+                  inputFormatters: [
+                    if (!isAndroid && !isiOS)
+                      TextInputFormatter.withFunction((oldValue, newValue) {
+                        return TextEditingValue(
+                          selection: newValue.selection,
+                          text: newValue.text
+                              .toCapitalization(TextCapitalization.sentences),
+                        );
+                      }),
+                    FilteringTextInputFormatter.allow(RegExp('^[^\\s].*'))
+                  ],
+                ),
               ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(0, 0, 4, 0),
+            child: FlutterFlowIconButton(
+              borderColor: FlutterFlowTheme.of(context).primary,
+              borderRadius: 30,
+              buttonSize: 40,
+              fillColor: FlutterFlowTheme.of(context).primary,
+              icon: Icon(
+                Icons.send,
+                color: FlutterFlowTheme.of(context).primaryText,
+                size: 20,
+              ),
+              onPressed: _isSending ? null : _sendMessage,
             ),
           ),
         ],
@@ -2070,7 +2674,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Babes Club Members Only',
+                'babes club Members Only',
                 textAlign: TextAlign.center,
                 style: FlutterFlowTheme.of(context).headlineSmall.override(
                       fontFamily:
@@ -2081,7 +2685,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
               ),
               const SizedBox(height: 12),
               Text(
-                'This private community chat is an intimate close-friends circle reserved exclusively for active Babes Club members ♡',
+                'This private community chat is an intimate close-friends circle reserved exclusively for active babes club members ♡',
                 textAlign: TextAlign.center,
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
                       fontFamily: FlutterFlowTheme.of(context).bodyMediumFamily,
@@ -2106,7 +2710,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                     context.pushNamed(JoinClubWidget.routeName);
                   },
                   child: const Text(
-                    'Join Babes Club ♡',
+                    'Join babes club ♡',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,

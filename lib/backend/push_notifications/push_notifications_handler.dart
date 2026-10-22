@@ -288,6 +288,8 @@ final parametersBuilderMap =
   'event': ParameterData.none(),
   'signUp008': ParameterData.none(),
   'profileEditStarSign': ParameterData.none(),
+  'babesClubChatScreen': ParameterData.none(),
+  'clubMembers': ParameterData.none(),
 };
 
 Map<String, dynamic> getInitialParameterData(Map<String, dynamic> data) {

@@ -594,11 +594,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => BabesClubWidget(),
         ),
         FFRoute(
-          name: BabesClubChatPageWidget.routeName,
-          path: BabesClubChatPageWidget.routePath,
-          builder: (context, params) => BabesClubChatPageWidget(),
-        ),
-        FFRoute(
           name: DiscountPerkWidget.routeName,
           path: DiscountPerkWidget.routePath,
           builder: (context, params) => DiscountPerkWidget(),
@@ -637,6 +632,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ProfileEditStarSignWidget.routeName,
           path: ProfileEditStarSignWidget.routePath,
           builder: (context, params) => ProfileEditStarSignWidget(),
+        ),
+        FFRoute(
+          name: BabesClubChatScreenWidget.routeName,
+          path: BabesClubChatScreenWidget.routePath,
+          builder: (context, params) => BabesClubChatScreenWidget(),
+        ),
+        FFRoute(
+          name: ClubMembersWidget.routeName,
+          path: ClubMembersWidget.routePath,
+          builder: (context, params) => ClubMembersWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

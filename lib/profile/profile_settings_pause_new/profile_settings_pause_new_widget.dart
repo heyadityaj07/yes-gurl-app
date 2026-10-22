@@ -6,7 +6,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/link_up/link_up_message/link_up_message_widget.dart';
 import 'dart:ui';
 import '/index.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

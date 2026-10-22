@@ -125,6 +125,8 @@ class _WaitListWidgetState extends State<WaitListWidget> {
                   logFirebaseEvent('WAIT_LIST_JOIN_THE_WAITLIST_BTN_ON_TAP');
                   logFirebaseEvent('Button_launch_u_r_l');
                   await launchURL('https://forms.gle/muWBhavc6XcaLeTB7');
+                  logFirebaseEvent('Button_close_dialog_drawer_etc');
+                  Navigator.pop(context);
                 },
                 text: 'join the waitlist',
                 options: FFButtonOptions(

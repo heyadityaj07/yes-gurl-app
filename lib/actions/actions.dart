@@ -15,3 +15,5 @@ Future notificationRequest(BuildContext context) async {
     await actions.receiveNotification();
   }
 }
+
+Future clubAction(BuildContext context) async {}

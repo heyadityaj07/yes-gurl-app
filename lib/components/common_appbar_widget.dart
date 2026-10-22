@@ -6,7 +6,9 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/custom_functions.dart' as functions;
+import '/flutter_flow/revenue_cat_util.dart' as revenue_cat;
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -117,22 +119,88 @@ class _CommonAppbarWidgetState extends State<CommonAppbarWidget> {
                 ],
               ),
             ),
-            Align(
-              alignment: AlignmentDirectional(0.0, 0.0),
-              child: FlutterFlowIconButton(
-                borderRadius: 40.0,
-                buttonSize: 40.0,
-                icon: Icon(
-                  Icons.star,
-                  color: FlutterFlowTheme.of(context).accent1,
-                  size: 30.0,
-                ),
-                onPressed: () async {
-                  logFirebaseEvent('COMMON_APPBAR_COMP_star_ICN_ON_TAP');
-                  logFirebaseEvent('IconButton_navigate_to');
+            InkWell(
+              splashColor: Colors.transparent,
+              focusColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              onTap: () async {
+                logFirebaseEvent('COMMON_APPBAR_Column_ky3tb0yw_ON_TAP');
+                logFirebaseEvent('Column_navigate_to');
 
-                  context.pushNamed(JoinClubWidget.routeName);
-                },
+                context.pushNamed(ProfileWidget.routeName);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      logFirebaseEvent(
+                          'COMMON_APPBAR_COMP_Stack_asxyef8t_ON_TAP');
+                      if (valueOrDefault<bool>(
+                              currentUserDocument?.isSubscriptionActive,
+                              false) ||
+                          revenue_cat.hasActiveSubscription) {
+                        logFirebaseEvent('Stack_navigate_to');
+
+                        context.goNamed(BabesClubWidget.routeName);
+                      } else {
+                        logFirebaseEvent('Stack_custom_action');
+                        await actions.syncUserSubscriptionAndClubStatus();
+                        if (valueOrDefault<bool>(
+                                currentUserDocument?.isSubscriptionActive,
+                                false) ||
+                            revenue_cat.hasActiveSubscription) {
+                          logFirebaseEvent('Stack_navigate_to');
+
+                          context.goNamed(BabesClubWidget.routeName);
+                        } else {
+                          logFirebaseEvent('Stack_navigate_to');
+
+                          context.pushNamed(JoinClubWidget.routeName);
+                        }
+                      }
+                    },
+                    child: Container(
+                      width: 26.0,
+                      child: Stack(
+                        children: [
+                          Icon(
+                            Icons.star,
+                            color: FlutterFlowTheme.of(context).accent1,
+                            size: 30.0,
+                          ),
+                          if ((valueOrDefault<bool>(
+                                      currentUserDocument?.isInterestPass,
+                                      false) !=
+                                  true) ||
+                              (valueOrDefault<bool>(
+                                      currentUserDocument?.isPromptPass,
+                                      false) !=
+                                  true))
+                            Align(
+                              alignment: AlignmentDirectional(1.0, -1.0),
+                              child: AuthUserStreamWidget(
+                                builder: (context) => Container(
+                                  width: 10.0,
+                                  height: 10.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ].divide(SizedBox(width: 8.0)),

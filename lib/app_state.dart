@@ -38,6 +38,17 @@ class FFAppState extends ChangeNotifier {
                   (await secureStorage.getInt('ff_lastCommunitySeenAt'))!)
               : _lastCommunitySeenAt;
     });
+    await _safeInitAsync(() async {
+      _isBabesChatOpen =
+          await secureStorage.getBool('ff_isBabesChatOpen') ?? _isBabesChatOpen;
+    });
+    await _safeInitAsync(() async {
+      _lastClubOpenedAt =
+          await secureStorage.read(key: 'ff_lastClubOpenedAt') != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  (await secureStorage.getInt('ff_lastClubOpenedAt'))!)
+              : _lastClubOpenedAt;
+    });
   }
 
   void update(VoidCallback callback) {
@@ -917,7 +928,10 @@ class FFAppState extends ChangeNotifier {
         : secureStorage.remove('ff_lastLinkupSeenAt');
   }
 
-  void deleteLastLinkupSeenAt() {
+  void deleteLastLinkupSeenAt({bool resetState = false}) {
+    if (resetState) {
+      _lastLinkupSeenAt = null;
+    }
     secureStorage.delete(key: 'ff_lastLinkupSeenAt');
   }
 
@@ -931,8 +945,42 @@ class FFAppState extends ChangeNotifier {
         : secureStorage.remove('ff_lastCommunitySeenAt');
   }
 
-  void deleteLastCommunitySeenAt() {
+  void deleteLastCommunitySeenAt({bool resetState = false}) {
+    if (resetState) {
+      _lastCommunitySeenAt = null;
+    }
     secureStorage.delete(key: 'ff_lastCommunitySeenAt');
+  }
+
+  bool _isBabesChatOpen = false;
+  bool get isBabesChatOpen => _isBabesChatOpen;
+  set isBabesChatOpen(bool value) {
+    _isBabesChatOpen = value;
+    secureStorage.setBool('ff_isBabesChatOpen', value);
+  }
+
+  void deleteIsBabesChatOpen({bool resetState = false}) {
+    if (resetState) {
+      _isBabesChatOpen = false;
+    }
+    secureStorage.delete(key: 'ff_isBabesChatOpen');
+  }
+
+  DateTime? _lastClubOpenedAt;
+  DateTime? get lastClubOpenedAt => _lastClubOpenedAt;
+  set lastClubOpenedAt(DateTime? value) {
+    _lastClubOpenedAt = value;
+    value != null
+        ? secureStorage.setInt(
+            'ff_lastClubOpenedAt', value.millisecondsSinceEpoch)
+        : secureStorage.remove('ff_lastClubOpenedAt');
+  }
+
+  void deleteLastClubOpenedAt({bool resetState = false}) {
+    if (resetState) {
+      _lastClubOpenedAt = null;
+    }
+    secureStorage.delete(key: 'ff_lastClubOpenedAt');
   }
 }
 

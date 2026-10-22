@@ -12,4 +12,3 @@ export 'chat_message_text.dart' show ChatMessageText;
 export 'community_messages.dart' show CommunityMessages;
 export 'discover_community.dart' show DiscoverCommunity;
 export 'babes_club_chat_widget.dart' show BabesClubChatWidget;
-

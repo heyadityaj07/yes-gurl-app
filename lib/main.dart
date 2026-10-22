@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'flutter_flow/nav/nav.dart';
 import 'index.dart';
+import 'flutter_flow/revenue_cat_util.dart' as revenue_cat;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,12 +29,20 @@ void main() async {
   // Start initial custom actions code
   await actions.receiveNotification();
   await actions.initializeUserStatusFields();
+  await actions.syncUserSubscriptionAndClubStatus();
   // End initial custom actions code
 
   await FlutterFlowTheme.initialize();
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
+
+  await revenue_cat.initialize(
+    "appl_IAUEsHpNWGrAiPViiDfRaaRivFf",
+    "goog_uYvQqELGJoRGGrWNpRgiSlmMvKt",
+    debugLogEnabled: true,
+    loadDataAfterLaunch: true,
+  );
 
   if (!kIsWeb) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -87,7 +96,9 @@ class _MyAppState extends State<MyApp> {
           .toList();
   late Stream<BaseAuthUser> userStream;
 
-  final authUserSub = authenticatedUserStream.listen((_) {});
+  final authUserSub = authenticatedUserStream.listen((user) {
+    revenue_cat.login(user?.uid);
+  });
   final fcmTokenSub = fcmTokenUserStream.listen(
     (_) {},
     // Registering a token can fail for reasons outside the app's control (a

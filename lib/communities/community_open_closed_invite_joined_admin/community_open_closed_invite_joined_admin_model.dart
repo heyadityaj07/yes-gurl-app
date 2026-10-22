@@ -19,8 +19,8 @@ import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
 import 'community_open_closed_invite_joined_admin_widget.dart'
     show CommunityOpenClosedInviteJoinedAdminWidget;
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';

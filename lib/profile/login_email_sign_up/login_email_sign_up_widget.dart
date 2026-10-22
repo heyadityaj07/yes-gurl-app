@@ -7,7 +7,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:math';
 import 'dart:ui';
 import '/index.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -439,7 +439,9 @@ class _LoginEmailSignUpWidgetState extends State<LoginEmailSignUpWidget>
                                           _model.passwordSignUpVisibility =
                                               !_model.passwordSignUpVisibility);
                                     },
-                                    focusNode: FocusNode(skipTraversal: true),
+                                    focusNode: _model
+                                        .passwordSignUpPasswordVisibilityFocusNode
+                                      ..skipTraversal = !(false),
                                     child: Icon(
                                       _model.passwordSignUpVisibility
                                           ? Icons.visibility_outlined

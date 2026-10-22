@@ -1,4 +1,5 @@
-import '/components/opportunity_card_widget.dart';
+import '/club/opportunity_card/opportunity_card_widget.dart';
+import '/club/select_session/select_session_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';

@@ -8,7 +8,7 @@ import 'dart:math';
 import 'dart:ui';
 import '/index.dart';
 import 'login_email_sign_up_widget.dart' show LoginEmailSignUpWidget;
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -37,6 +37,7 @@ class LoginEmailSignUpModel extends FlutterFlowModel<LoginEmailSignUpWidget> {
   }
 
   // State field(s) for passwordSignUp widget.
+  late FocusNode passwordSignUpPasswordVisibilityFocusNode;
   FocusNode? passwordSignUpFocusNode;
   TextEditingController? passwordSignUpTextController;
   late bool passwordSignUpVisibility;
@@ -57,6 +58,7 @@ class LoginEmailSignUpModel extends FlutterFlowModel<LoginEmailSignUpWidget> {
   @override
   void initState(BuildContext context) {
     emailSignUpTextControllerValidator = _emailSignUpTextControllerValidator;
+    passwordSignUpPasswordVisibilityFocusNode = FocusNode();
     passwordSignUpVisibility = false;
     passwordSignUpTextControllerValidator =
         _passwordSignUpTextControllerValidator;
@@ -69,5 +71,6 @@ class LoginEmailSignUpModel extends FlutterFlowModel<LoginEmailSignUpWidget> {
 
     passwordSignUpFocusNode?.dispose();
     passwordSignUpTextController?.dispose();
+    passwordSignUpPasswordVisibilityFocusNode.dispose();
   }
 }

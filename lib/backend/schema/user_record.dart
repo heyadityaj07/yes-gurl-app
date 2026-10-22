@@ -426,6 +426,11 @@ class UserRecord extends FirestoreRecord {
   DocumentReference? get clubMember => _clubMember;
   bool hasClubMember() => _clubMember != null;
 
+  // "is_subscription_active" field.
+  bool? _isSubscriptionActive;
+  bool get isSubscriptionActive => _isSubscriptionActive ?? false;
+  bool hasIsSubscriptionActive() => _isSubscriptionActive != null;
+
   void _initializeFields() {
     _email = snapshotData['email'] as String?;
     _timeCreated = snapshotData['time_created'] as DateTime?;
@@ -510,6 +515,7 @@ class UserRecord extends FirestoreRecord {
     _messageReports = getDataList(snapshotData['message_reports']);
     _starSign = snapshotData['star_sign'] as String?;
     _clubMember = snapshotData['club_member'] as DocumentReference?;
+    _isSubscriptionActive = snapshotData['is_subscription_active'] as bool?;
   }
 
   static CollectionReference get collection =>
@@ -603,6 +609,7 @@ Map<String, dynamic> createUserRecordData({
   bool? todayPotential,
   String? starSign,
   DocumentReference? clubMember,
+  bool? isSubscriptionActive,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -664,6 +671,7 @@ Map<String, dynamic> createUserRecordData({
       'today_potential': todayPotential,
       'star_sign': starSign,
       'club_member': clubMember,
+      'is_subscription_active': isSubscriptionActive,
     }.withoutNulls,
   );
 
@@ -760,7 +768,8 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         listEquality.equals(e1?.reportCommunityList, e2?.reportCommunityList) &&
         listEquality.equals(e1?.messageReports, e2?.messageReports) &&
         e1?.starSign == e2?.starSign &&
-        e1?.clubMember == e2?.clubMember;
+        e1?.clubMember == e2?.clubMember &&
+        e1?.isSubscriptionActive == e2?.isSubscriptionActive;
   }
 
   @override
@@ -845,7 +854,8 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         const ListEquality().hash(e?.reportCommunityList),
         const ListEquality().hash(e?.messageReports),
         e?.starSign,
-        e?.clubMember
+        e?.clubMember,
+        e?.isSubscriptionActive
       ]);
 
   @override

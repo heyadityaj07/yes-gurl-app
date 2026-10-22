@@ -13,7 +13,7 @@ import '/flutter_flow/upload_data.dart';
 import 'dart:ui';
 import '/index.dart';
 import 'communities_edit_widget.dart' show CommunitiesEditWidget;
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';

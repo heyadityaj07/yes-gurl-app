@@ -111,6 +111,8 @@ class _LoyaltyCardWidgetState extends State<LoyaltyCardWidget> {
                   logFirebaseEvent('LOYALTY_CARD_VIEW_EVENT_HISTORY_BTN_ON_T');
                   logFirebaseEvent('Button_launch_u_r_l');
                   await launchURL('https://my.favecard.co/yes-gurl');
+                  logFirebaseEvent('Button_close_dialog_drawer_etc');
+                  Navigator.pop(context);
                 },
                 text: 'view event history',
                 options: FFButtonOptions(

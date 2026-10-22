@@ -23,6 +23,7 @@ class _BabesClubChatPageWidgetState extends State<BabesClubChatPageWidget> {
   @override
   void initState() {
     super.initState();
+    FFAppState().isBabesChatOpen = true;
     _model = createModel(context, () => BabesClubChatModel());
     logFirebaseEvent('screen_view',
         parameters: {'screen_name': 'babesClubChat'});
@@ -31,6 +32,7 @@ class _BabesClubChatPageWidgetState extends State<BabesClubChatPageWidget> {
 
   @override
   void dispose() {
+    FFAppState().isBabesChatOpen = false;
     _model.dispose();
     super.dispose();
   }
@@ -46,7 +48,6 @@ class _BabesClubChatPageWidgetState extends State<BabesClubChatPageWidget> {
         child: custom_widgets.BabesClubChatWidget(
           width: double.infinity,
           height: double.infinity,
-          roomId: 'babes_club_lounge',
           isMember: true,
           onBack: () async {
             if (Navigator.of(context).canPop()) {
@@ -56,7 +57,6 @@ class _BabesClubChatPageWidgetState extends State<BabesClubChatPageWidget> {
             }
           },
         ),
-
       ),
     );
   }

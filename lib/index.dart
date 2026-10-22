@@ -107,8 +107,6 @@ export '/communities/share_community/share_community_widget.dart'
 export '/club/join_club/join_club_widget.dart' show JoinClubWidget;
 export '/club/success_page/success_page_widget.dart' show SuccessPageWidget;
 export '/club/babes_club/babes_club_widget.dart' show BabesClubWidget;
-export '/club/babes_club_chat/babes_club_chat_widget.dart'
-    show BabesClubChatPageWidget;
 export '/club/discount_perk/discount_perk_widget.dart' show DiscountPerkWidget;
 export '/club/book_session/book_session_widget.dart' show BookSessionWidget;
 export '/club/poll_screen/poll_screen_widget.dart' show PollScreenWidget;
@@ -119,3 +117,6 @@ export '/club/event/event_widget.dart' show EventWidget;
 export '/sign_up/sign_up008/sign_up008_widget.dart' show SignUp008Widget;
 export '/profile/profile_edit_star_sign/profile_edit_star_sign_widget.dart'
     show ProfileEditStarSignWidget;
+export '/club/babes_club_chat_screen/babes_club_chat_screen_widget.dart'
+    show BabesClubChatScreenWidget;
+export '/club/club_members/club_members_widget.dart' show ClubMembersWidget;

@@ -62,6 +62,11 @@ class ReportRecord extends FirestoreRecord {
   DocumentReference? get communityMessage => _communityMessage;
   bool hasCommunityMessage() => _communityMessage != null;
 
+  // "club_message" field.
+  DocumentReference? _clubMessage;
+  DocumentReference? get clubMessage => _clubMessage;
+  bool hasClubMessage() => _clubMessage != null;
+
   void _initializeFields() {
     _userReference = snapshotData['user_reference'] as DocumentReference?;
     _title = snapshotData['title'] as String?;
@@ -73,6 +78,7 @@ class ReportRecord extends FirestoreRecord {
         snapshotData['event_comment_reference'] as DocumentReference?;
     _community = snapshotData['community'] as DocumentReference?;
     _communityMessage = snapshotData['community_message'] as DocumentReference?;
+    _clubMessage = snapshotData['club_message'] as DocumentReference?;
   }
 
   static CollectionReference get collection =>
@@ -117,6 +123,7 @@ Map<String, dynamic> createReportRecordData({
   DocumentReference? eventCommentReference,
   DocumentReference? community,
   DocumentReference? communityMessage,
+  DocumentReference? clubMessage,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -129,6 +136,7 @@ Map<String, dynamic> createReportRecordData({
       'event_comment_reference': eventCommentReference,
       'community': community,
       'community_message': communityMessage,
+      'club_message': clubMessage,
     }.withoutNulls,
   );
 
@@ -148,7 +156,8 @@ class ReportRecordDocumentEquality implements Equality<ReportRecord> {
         e1?.chatRef == e2?.chatRef &&
         e1?.eventCommentReference == e2?.eventCommentReference &&
         e1?.community == e2?.community &&
-        e1?.communityMessage == e2?.communityMessage;
+        e1?.communityMessage == e2?.communityMessage &&
+        e1?.clubMessage == e2?.clubMessage;
   }
 
   @override
@@ -161,7 +170,8 @@ class ReportRecordDocumentEquality implements Equality<ReportRecord> {
         e?.chatRef,
         e?.eventCommentReference,
         e?.community,
-        e?.communityMessage
+        e?.communityMessage,
+        e?.clubMessage
       ]);
 
   @override

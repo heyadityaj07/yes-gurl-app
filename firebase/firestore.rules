@@ -180,34 +180,35 @@ service cloud.firestore {
     match /club_members/{document} {
       allow create: if true;
       allow read: if true;
-      allow write: if true;
-      allow delete: if true;
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /club_features/{document} {
       allow create: if true;
       allow read: if true;
-      allow write: if true;
-      allow delete: if true;
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /chat_rooms/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow create: if true;
+      allow read: if true;
+      allow write: if false;
       allow delete: if false;
     }
 
     match /chat_rooms/{parent}/chat_messages/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+      allow create: if true;
+      allow read: if true;
+      allow write: if false;
+      allow delete: if false;
     }
 
     match /{path=**}/chat_messages/{document} {
-      allow read: if request.auth != null;
+      allow read: if true;
     }
+
 
     match /ff_user_push_notifications/{id} {
       allow read, update, delete: if false;
