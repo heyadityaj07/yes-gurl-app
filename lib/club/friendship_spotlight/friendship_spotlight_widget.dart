@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/backend/backend.dart';
 import '/backend/schema/enums/enums.dart';
 import '/club/spotlight_card/spotlight_card_widget.dart';
@@ -5,10 +6,13 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:async';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'friendship_spotlight_model.dart';
@@ -37,6 +41,21 @@ class _FriendshipSpotlightWidgetState extends State<FriendshipSpotlightWidget> {
 
     logFirebaseEvent('screen_view',
         parameters: {'screen_name': 'friendshipSpotlight'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('FRIENDSHIP_SPOTLIGHT_friendshipSpotlight');
+      logFirebaseEvent('friendshipSpotlight_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 

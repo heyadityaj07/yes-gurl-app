@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/components/common_appbar_widget.dart';
@@ -57,6 +58,16 @@ class _LinkUpWidgetState extends State<LinkUpWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('LINK_UP_PAGE_LinkUp_ON_INIT_STATE');
+      logFirebaseEvent('LinkUp_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('LinkUp_update_app_state');
       FFAppState().sharabelImage = '';
       FFAppState().sharedEvent = null;

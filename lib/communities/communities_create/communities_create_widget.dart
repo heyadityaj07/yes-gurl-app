@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/backend/firebase_storage/storage.dart';
@@ -11,11 +12,14 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import '/flutter_flow/upload_data.dart';
+import 'dart:async';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +49,21 @@ class _CommunitiesCreateWidgetState extends State<CommunitiesCreateWidget> {
 
     logFirebaseEvent('screen_view',
         parameters: {'screen_name': 'communitiesCreate'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('COMMUNITIES_CREATE_communitiesCreate_ON_');
+      logFirebaseEvent('communitiesCreate_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     _model.nameTextController ??= TextEditingController();
     _model.nameFocusNode ??= FocusNode();
 

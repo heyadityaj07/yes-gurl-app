@@ -15,6 +15,8 @@ import 'package:flutter/material.dart' hide RepeatMode;
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/services.dart';
 import 'package:yes_gurl/flutter_flow/flutter_flow_icon_button.dart';
@@ -66,7 +68,6 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   bool _isLoadingInitial = true;
   bool _isLoadingOlder = false;
   bool _hasMoreOlder = true;
-  bool _isSending = false;
 
   // Membership & Restrictions
   bool _isMemberActive = true; // default true while checking to avoid flash
@@ -467,17 +468,43 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
   }
 
   bool _isMarkingSeen = false;
+  DateTime? _lastMarkSeenTime;
 
   void _checkAndMarkUnseenMessages() {
     final userRef = currentUserReference;
     if (userRef == null || _isMarkingSeen) return;
 
+    if (_lastMarkSeenTime != null &&
+        DateTime.now().difference(_lastMarkSeenTime!).inMilliseconds < 1500) {
+      return;
+    }
+
     if (_liveDocs.isNotEmpty) {
       final newestData = _liveDocs.first.data() as Map<String, dynamic>?;
       if (newestData != null) {
+        final authorRef = newestData['user_ref'];
+        final uid = userRef.id;
+        final isByMe = authorRef == userRef ||
+            (authorRef is DocumentReference && authorRef.id == uid) ||
+            (authorRef is String &&
+                (authorRef == uid || authorRef.endsWith('/$uid')));
+
+        if (isByMe) return;
+
         final seenBy = newestData['message_seen_by'];
-        if (newestData['user_ref'] != userRef &&
-            (seenBy is! List || !seenBy.contains(userRef))) {
+        bool hasSeen = false;
+        if (seenBy is Iterable) {
+          for (final item in seenBy) {
+            if (item == userRef ||
+                (item is DocumentReference && item.id == uid) ||
+                (item is String && (item == uid || item.endsWith('/$uid')))) {
+              hasSeen = true;
+              break;
+            }
+          }
+        }
+
+        if (!hasSeen) {
           _triggerMarkSeen();
         }
       }
@@ -488,6 +515,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     final userRef = currentUserReference;
     if (userRef == null || _isMarkingSeen) return;
     _isMarkingSeen = true;
+    _lastMarkSeenTime = DateTime.now();
     try {
       await markClubMessagesAsSeen(_roomDocRef, userRef);
     } catch (_) {
@@ -631,48 +659,71 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
     );
   }
 
-  /// Send message
+  /// Send message with zero delay and instant UI feedback
   Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty && _selectedImageBytes == null && imagePath.isEmpty) {
+    final hasImage = _selectedImageBytes != null || imagePath.isNotEmpty;
+    if (text.isEmpty && !hasImage) {
       return;
     }
-    if (_isSending) return;
 
     final userRef = currentUserReference;
     if (userRef == null) return;
 
+    // Snapshot current input state
+    final sendText = text;
+    final replyRef = _replyingToMessageRef;
+    final replyUserRef = _replyingToUserRef;
+    final replyText = _replyingToMessage?['text'] as String?;
+    final existingImagePath = imagePath;
+    final existingImageBytes = _selectedImageBytes;
+
+    // 1. Instant optimistic UI: Clear input and reset previews immediately
+    _textController.clear();
     safeSetState(() {
-      _isSending = true;
+      _selectedImageBytes = null;
+      _selectedImageFilename = null;
+      imagePath = '';
+      uploadedFileUrl = '';
+      uploadedLocalFile = FFUploadedFile(bytes: Uint8List.fromList([]));
+      _replyingToMessage = null;
+      _replyingToMessageRef = null;
+      _replyingToUserRef = null;
     });
 
-    try {
-      String? imageUrl;
-      String? storagePath;
-      DateTime? imageExpiresAt;
+    // Instant scroll to latest message (position 0 in reverse ListView)
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
 
-      // Check if image was pre-uploaded through FlutterFlow pipeline or needs upload
-      if (imagePath.isNotEmpty) {
-        imageUrl = imagePath;
-        imageExpiresAt = DateTime.now().add(const Duration(hours: 24));
-      } else if (_selectedImageBytes != null) {
+    try {
+      String? imageUrl =
+          existingImagePath.isNotEmpty ? existingImagePath : null;
+      DateTime? imageExpiresAt = imageUrl != null
+          ? DateTime.now().add(const Duration(hours: 24))
+          : null;
+
+      if (imageUrl == null && existingImageBytes != null) {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
-        storagePath = 'chat_images/${userRef.id}/img_$timestamp.jpg';
-        imageUrl = await uploadData(storagePath, _selectedImageBytes!);
-        // Image expires after 24 hours
+        final storagePath = 'chat_images/${userRef.id}/img_$timestamp.jpg';
+        imageUrl = await uploadData(storagePath, existingImageBytes);
         imageExpiresAt = DateTime.now().add(const Duration(hours: 24));
       }
 
       final messageData = <String, dynamic>{
         'user_ref': userRef,
-        'text': text,
+        'text': sendText,
         'image_url': imageUrl,
         'image_expires_at':
             imageExpiresAt != null ? Timestamp.fromDate(imageExpiresAt) : null,
         'created_at': FieldValue.serverTimestamp(),
-        'reply_message_ref': _replyingToMessageRef,
-        'reply_user_ref': _replyingToUserRef,
-        'reply_to_text': _replyingToMessage?['text'] as String?,
+        'reply_message_ref': replyRef,
+        'reply_user_ref': replyUserRef,
+        'reply_to_text': replyText,
         'reactions': <String, int>{},
         'reaction_users': <String, dynamic>{},
         'deleted_at': null,
@@ -681,51 +732,31 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
         'message_seen_by': [userRef],
       };
 
+      // Write to messages collection
       await _messagesCollection.add(messageData);
 
-      // Update room last message info
-      await _roomDocRef.update({
-        'last_message':
-            text.isNotEmpty ? text : (imageUrl != null ? '📷 Photo' : ''),
-        'last_message_time': FieldValue.serverTimestamp(),
-        'last_message_user': userRef,
-      });
-
-      // Clear input and state
-      _textController.clear();
-      safeSetState(() {
-        _selectedImageBytes = null;
-        _selectedImageFilename = null;
-        imagePath = '';
-        uploadedFileUrl = '';
-        uploadedLocalFile = FFUploadedFile(bytes: Uint8List.fromList([]));
-        _replyingToMessage = null;
-        _replyingToMessageRef = null;
-        _replyingToUserRef = null;
-      });
-
-      // Scroll to bottom (top in reverse ListView)
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
-      }
+      // Update room metadata in background without blocking send response
+      unawaited(
+        _roomDocRef.update({
+          'last_message': sendText.isNotEmpty
+              ? sendText
+              : (imageUrl != null ? '📷 Photo' : ''),
+          'last_message_time': FieldValue.serverTimestamp(),
+          'last_message_user': userRef,
+        }).catchError((err) {
+          debugPrint('Failed to update room last message: $err');
+        }),
+      );
     } catch (e) {
       if (mounted) {
+        // Restore message text if write failed
+        _textController.text = sendText;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send message: $e'),
             backgroundColor: FlutterFlowTheme.of(context).error,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        safeSetState(() {
-          _isSending = false;
-        });
       }
     }
   }
@@ -2635,7 +2666,7 @@ class _BabesClubChatWidgetState extends State<BabesClubChatWidget> {
                 color: FlutterFlowTheme.of(context).primaryText,
                 size: 20,
               ),
-              onPressed: _isSending ? null : _sendMessage,
+              onPressed: _sendMessage,
             ),
           ),
         ],

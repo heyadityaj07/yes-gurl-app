@@ -31,3 +31,4 @@ export 'sync_user_subscription_and_club_status.dart'
 export 'join_or_restore_babes_club.dart' show joinOrRestoreBabesClub;
 export 'mark_club_messages_as_seen.dart' show markClubMessagesAsSeen;
 export 'has_unread_club_messages.dart' show hasUnreadClubMessages;
+export 'log_screen_view.dart' show logScreenView;

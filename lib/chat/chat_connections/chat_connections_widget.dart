@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/chat/block/block_widget.dart';
@@ -14,6 +15,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:async';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
@@ -61,6 +63,16 @@ class _ChatConnectionsWidgetState extends State<ChatConnectionsWidget> {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('CHAT_CONNECTIONS_chatConnections_ON_INIT');
+      logFirebaseEvent('chatConnections_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('chatConnections_update_app_state');
       FFAppState().sharabelImage = '';
       FFAppState().sharedEvent = null;

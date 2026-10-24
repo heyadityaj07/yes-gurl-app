@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/chat/no_chat_connection/no_chat_connection_widget.dart';
@@ -56,6 +57,16 @@ class _ChatWidgetState extends State<ChatWidget> with TickerProviderStateMixin {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('CHAT_PAGE_chat_ON_INIT_STATE');
+      logFirebaseEvent('chat_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('chat_update_app_state');
       FFAppState().chatseen = true;
       safeSetState(() {});

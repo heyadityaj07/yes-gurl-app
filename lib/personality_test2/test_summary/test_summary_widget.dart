@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -7,8 +8,10 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/potential_connections/compatible/compatible_widget.dart';
 import '/potential_connections/possible/possible_widget.dart';
 import '/potential_connections/try_your_luck/try_your_luck_widget.dart';
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
@@ -61,6 +64,16 @@ class _TestSummaryWidgetState extends State<TestSummaryWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('TEST_SUMMARY_testSummary_ON_INIT_STATE');
+      logFirebaseEvent('testSummary_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('testSummary_update_page_state');
       _model.personality =
           widget!.personalityParms != null && widget!.personalityParms != ''

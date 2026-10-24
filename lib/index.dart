@@ -120,3 +120,4 @@ export '/profile/profile_edit_star_sign/profile_edit_star_sign_widget.dart'
 export '/club/babes_club_chat_screen/babes_club_chat_screen_widget.dart'
     show BabesClubChatScreenWidget;
 export '/club/club_members/club_members_widget.dart' show ClubMembersWidget;
+export '/sign_up/signup00/signup00_widget.dart' show Signup00Widget;

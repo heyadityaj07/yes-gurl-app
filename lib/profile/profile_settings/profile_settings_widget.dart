@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/backend/push_notifications/push_notifications_util.dart';
@@ -8,6 +9,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/profile/logout/logout_widget.dart';
 import '/profile/profile_settings_delete_new/profile_settings_delete_new_widget.dart';
 import '/profile/profile_settings_pause_new/profile_settings_pause_new_widget.dart';
+import 'dart:async';
 import 'dart:ui';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/permissions_util.dart';
@@ -15,6 +17,7 @@ import '/index.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'profile_settings_model.dart';
@@ -42,6 +45,21 @@ class _ProfileSettingsWidgetState extends State<ProfileSettingsWidget> {
 
     logFirebaseEvent('screen_view',
         parameters: {'screen_name': 'profileSettings'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('PROFILE_SETTINGS_profileSettings_ON_INIT');
+      logFirebaseEvent('profileSettings_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     _model.switchValue = valueOrDefault<bool>(
             currentUserDocument?.isNotificationEnabled, false) ==
         true;

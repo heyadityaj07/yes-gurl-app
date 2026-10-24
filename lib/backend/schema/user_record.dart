@@ -431,6 +431,11 @@ class UserRecord extends FirestoreRecord {
   bool get isSubscriptionActive => _isSubscriptionActive ?? false;
   bool hasIsSubscriptionActive() => _isSubscriptionActive != null;
 
+  // "hear" field.
+  String? _hear;
+  String get hear => _hear ?? '';
+  bool hasHear() => _hear != null;
+
   void _initializeFields() {
     _email = snapshotData['email'] as String?;
     _timeCreated = snapshotData['time_created'] as DateTime?;
@@ -516,6 +521,7 @@ class UserRecord extends FirestoreRecord {
     _starSign = snapshotData['star_sign'] as String?;
     _clubMember = snapshotData['club_member'] as DocumentReference?;
     _isSubscriptionActive = snapshotData['is_subscription_active'] as bool?;
+    _hear = snapshotData['hear'] as String?;
   }
 
   static CollectionReference get collection =>
@@ -610,6 +616,7 @@ Map<String, dynamic> createUserRecordData({
   String? starSign,
   DocumentReference? clubMember,
   bool? isSubscriptionActive,
+  String? hear,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -672,6 +679,7 @@ Map<String, dynamic> createUserRecordData({
       'star_sign': starSign,
       'club_member': clubMember,
       'is_subscription_active': isSubscriptionActive,
+      'hear': hear,
     }.withoutNulls,
   );
 
@@ -769,7 +777,8 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         listEquality.equals(e1?.messageReports, e2?.messageReports) &&
         e1?.starSign == e2?.starSign &&
         e1?.clubMember == e2?.clubMember &&
-        e1?.isSubscriptionActive == e2?.isSubscriptionActive;
+        e1?.isSubscriptionActive == e2?.isSubscriptionActive &&
+        e1?.hear == e2?.hear;
   }
 
   @override
@@ -855,7 +864,8 @@ class UserRecordDocumentEquality implements Equality<UserRecord> {
         const ListEquality().hash(e?.messageReports),
         e?.starSign,
         e?.clubMember,
-        e?.isSubscriptionActive
+        e?.isSubscriptionActive,
+        e?.hear
       ]);
 
   @override

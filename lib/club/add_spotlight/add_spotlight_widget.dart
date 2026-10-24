@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/backend/schema/enums/enums.dart';
@@ -5,7 +6,9 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:async';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import 'package:cloud_firestore/cloud_firestore.dart' hide Type;
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
@@ -318,6 +321,18 @@ class _AddSpotlightWidgetState extends State<AddSpotlightWidget> {
                           : () async {
                               logFirebaseEvent(
                                   'ADD_SPOTLIGHT_PAGE_SUBMIT_BTN_ON_TAP');
+                              logFirebaseEvent('Button_custom_action');
+                              unawaited(
+                                () async {
+                                  await actions.logScreenView(
+                                    getCurrentRoute(context) == '/'
+                                        ? (loggedIn == true
+                                            ? '/splashScreen'
+                                            : '/login')
+                                        : getCurrentRoute(context),
+                                  );
+                                }(),
+                              );
                               logFirebaseEvent('Button_backend_call');
 
                               await SpotlightRecord.collection

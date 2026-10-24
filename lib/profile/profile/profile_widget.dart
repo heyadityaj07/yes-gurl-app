@@ -52,6 +52,16 @@ class _ProfileWidgetState extends State<ProfileWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('PROFILE_PAGE_profile_ON_INIT_STATE');
+      logFirebaseEvent('profile_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('profile_wait__delay');
       await Future.delayed(
         Duration(

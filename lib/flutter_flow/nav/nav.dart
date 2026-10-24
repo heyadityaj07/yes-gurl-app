@@ -642,6 +642,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ClubMembersWidget.routeName,
           path: ClubMembersWidget.routePath,
           builder: (context, params) => ClubMembersWidget(),
+        ),
+        FFRoute(
+          name: Signup00Widget.routeName,
+          path: Signup00Widget.routePath,
+          builder: (context, params) => Signup00Widget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );

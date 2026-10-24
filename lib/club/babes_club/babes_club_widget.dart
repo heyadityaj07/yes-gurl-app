@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/club/feature_card/feature_card_widget.dart';
@@ -43,6 +44,16 @@ class _BabesClubWidgetState extends State<BabesClubWidget> {
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('BABES_CLUB_PAGE_babesClub_ON_INIT_STATE');
+      logFirebaseEvent('babesClub_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       await Future.wait([
         Future(() async {
           logFirebaseEvent('babesClub_firestore_query');
@@ -85,15 +96,6 @@ class _BabesClubWidgetState extends State<BabesClubWidget> {
               ).then((s) => s.firstOrNull);
             }(),
           );
-        }),
-        Future(() async {
-          logFirebaseEvent('babesClub_custom_action');
-          _model.message = await actions.hasUnreadClubMessages(
-            currentUserReference,
-          );
-          logFirebaseEvent('babesClub_update_page_state');
-          _model.hasUnreadMessages = _model.message!;
-          safeSetState(() {});
         }),
       ]);
       logFirebaseEvent('babesClub_update_page_state');
@@ -195,34 +197,65 @@ class _BabesClubWidgetState extends State<BabesClubWidget> {
                       verticalDirection: VerticalDirection.down,
                       clipBehavior: Clip.none,
                       children: [
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            logFirebaseEvent(
-                                'BABES_CLUB_PAGE_FeatureCard_ON_TAP');
-                            logFirebaseEvent('FeatureCard_navigate_to');
-
-                            context
-                                .pushNamed(BabesClubChatScreenWidget.routeName);
-                          },
-                          child: wrapWithModel(
-                            model: _model.featureCardModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: FeatureCardWidget(
-                              icon: Icon(
-                                Icons.groups_rounded,
-                                color: FlutterFlowTheme.of(context).primary,
-                                size: 22.0,
-                              ),
-                              hasDot: _model.hasUnreadMessages,
-                              title: 'community chat',
-                              subtitle: 'chat with your babes',
-                              status: '',
-                            ),
+                        StreamBuilder<List<ChatMessagesRecord>>(
+                          stream: queryChatMessagesRecord(
+                            queryBuilder: (chatMessagesRecord) =>
+                                chatMessagesRecord.orderBy('created_at',
+                                    descending: true),
+                            singleRecord: true,
                           ),
+                          builder: (context, snapshot) {
+                            // Customize what your widget looks like when it's loading.
+                            if (!snapshot.hasData) {
+                              return Center(
+                                child: LinearProgressIndicator(
+                                  color: Color(0xFFFE99AB),
+                                ),
+                              );
+                            }
+                            List<ChatMessagesRecord>
+                                featureCardChatMessagesRecordList =
+                                snapshot.data!;
+                            final featureCardChatMessagesRecord =
+                                featureCardChatMessagesRecordList.isNotEmpty
+                                    ? featureCardChatMessagesRecordList.first
+                                    : null;
+
+                            return InkWell(
+                              splashColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () async {
+                                logFirebaseEvent(
+                                    'BABES_CLUB_PAGE_FeatureCard_ON_TAP');
+                                logFirebaseEvent('FeatureCard_navigate_to');
+
+                                context.pushNamed(
+                                    BabesClubChatScreenWidget.routeName);
+                              },
+                              child: wrapWithModel(
+                                model: _model.featureCardModel1,
+                                updateCallback: () => safeSetState(() {}),
+                                child: FeatureCardWidget(
+                                  icon: Icon(
+                                    Icons.groups_rounded,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    size: 22.0,
+                                  ),
+                                  hasDot: (featureCardChatMessagesRecord
+                                              ?.deletedBy ==
+                                          null) &&
+                                      !featureCardChatMessagesRecord!
+                                          .messageSeenBy
+                                          .contains(currentUserReference),
+                                  title: 'community chat',
+                                  subtitle: 'chat with your babes',
+                                  status: '',
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         if (_model.perks != null)
                           InkWell(

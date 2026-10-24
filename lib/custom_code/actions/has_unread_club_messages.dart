@@ -18,7 +18,6 @@ import '/auth/firebase_auth/auth_util.dart';
 Future<bool> hasUnreadClubMessages(
   DocumentReference? userRef,
 ) async {
-  // Add your function code here!
   final targetUserRef = userRef ?? currentUserReference;
   if (targetUserRef == null) return false;
 
@@ -26,72 +25,69 @@ Future<bool> hasUnreadClubMessages(
       .collection('chat_rooms')
       .doc('VaptPPzsVMyO5KYpGYPb');
 
+  final targetUid = targetUserRef.id;
+
   try {
     final messagesColl = effectiveRoomRef.collection('chat_messages');
 
-    // Find the latest message already seen by this user
-    DocumentSnapshot<Map<String, dynamic>>? lastSeenDoc;
-    try {
-      final lastSeenQuery = await messagesColl
-          .where('message_seen_by', arrayContains: targetUserRef)
-          .orderBy('created_at', descending: true)
-          .limit(1)
-          .get();
+    // Single-field query (created_at DESC) - NO composite index required!
+    final snap = await messagesColl
+        .orderBy('created_at', descending: true)
+        .limit(20)
+        .get();
 
-      if (lastSeenQuery.docs.isNotEmpty) {
-        lastSeenDoc = lastSeenQuery.docs.first;
+    if (snap.docs.isEmpty) {
+      return false;
+    }
+
+    for (final doc in snap.docs) {
+      final data = doc.data();
+
+      // Skip soft-deleted or removed messages
+      if (data['deleted_at'] != null || data['is_removed_by_admin'] == true) {
+        continue;
       }
-    } catch (e) {
-      try {
-        final recentQuery = await messagesColl
-            .orderBy('created_at', descending: true)
-            .limit(50)
-            .get();
 
-        for (final doc in recentQuery.docs) {
-          final data = doc.data();
-          final seenBy = data['message_seen_by'];
-          if (seenBy is List && seenBy.contains(targetUserRef)) {
-            lastSeenDoc = doc;
+      // Check if message was sent by target user
+      final authorRef = data['user_ref'];
+      final isByMe = authorRef == targetUserRef ||
+          (authorRef is DocumentReference && authorRef.id == targetUid) ||
+          (authorRef is String &&
+              (authorRef == targetUid || authorRef.endsWith('/$targetUid')));
+
+      if (isByMe) {
+        // Message sent by target user; check earlier messages in case an older message was unseen
+        continue;
+      }
+
+      // Check if target user has seen this message
+      final seenBy = data['message_seen_by'];
+      bool hasSeen = false;
+      if (seenBy is Iterable) {
+        for (final item in seenBy) {
+          if (item == targetUserRef) {
+            hasSeen = true;
+            break;
+          }
+          if (item is DocumentReference && item.id == targetUid) {
+            hasSeen = true;
+            break;
+          }
+          if (item is String &&
+              (item == targetUid || item.endsWith('/$targetUid'))) {
+            hasSeen = true;
             break;
           }
         }
-      } catch (_) {}
-    }
+      }
 
-    // CASE 1: User has NEVER seen any messages
-    if (lastSeenDoc == null) {
-      final latestMsgQuery = await messagesColl
-          .orderBy('created_at', descending: true)
-          .limit(1)
-          .get();
-
-      if (latestMsgQuery.docs.isEmpty) return false;
-
-      final data = latestMsgQuery.docs.first.data();
-      if (data['deleted_at'] != null) return false;
-      if (data['user_ref'] == targetUserRef) return false;
-
-      return true;
-    }
-
-    // CASE 2: User has seen messages before
-    final lastSeenCreatedAt = lastSeenDoc.data()?['created_at'];
-    if (lastSeenCreatedAt is! Timestamp) return false;
-
-    final unreadQuery = await messagesColl
-        .where('created_at', isGreaterThan: lastSeenCreatedAt)
-        .orderBy('created_at', descending: true)
-        .limit(5)
-        .get();
-
-    for (final doc in unreadQuery.docs) {
-      final data = doc.data();
-      if (data['deleted_at'] != null) continue;
-      if (data['user_ref'] == targetUserRef) continue;
-      final seenBy = data['message_seen_by'];
-      if (seenBy is! List || !seenBy.contains(targetUserRef)) {
+      if (!hasSeen) {
+        // Found a recent message not sent by user and not seen yet!
         return true;
+      } else {
+        // The most recent valid message has already been seen by the user.
+        // Since messages are ordered descending, the user is caught up to date!
+        return false;
       }
     }
 

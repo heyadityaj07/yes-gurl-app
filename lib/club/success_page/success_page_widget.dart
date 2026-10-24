@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/club/welcome_gift_card/welcome_gift_card_widget.dart';
 import '/club/welcome_pack/welcome_pack_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -5,8 +6,10 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:async';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -37,6 +40,21 @@ class _SuccessPageWidgetState extends State<SuccessPageWidget> {
     _model = createModel(context, () => SuccessPageModel());
 
     logFirebaseEvent('screen_view', parameters: {'screen_name': 'successPage'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('SUCCESS_successPage_ON_INIT_STATE');
+      logFirebaseEvent('successPage_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     if (!isWeb) {
       _keyboardVisibilitySubscription =
           KeyboardVisibilityController().onChange.listen((bool visible) {

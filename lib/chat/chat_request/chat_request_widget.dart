@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/backend/push_notifications/push_notifications_util.dart';
@@ -10,8 +11,10 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/profile/pause_account_chat/pause_account_chat_widget.dart';
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
@@ -57,6 +60,21 @@ class _ChatRequestWidgetState extends State<ChatRequestWidget>
     _model = createModel(context, () => ChatRequestModel());
 
     logFirebaseEvent('screen_view', parameters: {'screen_name': 'chatRequest'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('CHAT_REQUEST_chatRequest_ON_INIT_STATE');
+      logFirebaseEvent('chatRequest_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     _model.newTextfeildTextController ??= TextEditingController();
     _model.newTextfeildFocusNode ??= FocusNode();
     _model.newTextfeildFocusNode!.addListener(() => safeSetState(() {}));

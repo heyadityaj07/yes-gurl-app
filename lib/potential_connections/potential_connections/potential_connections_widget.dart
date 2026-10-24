@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
@@ -59,6 +60,16 @@ class _PotentialConnectionsWidgetState extends State<PotentialConnectionsWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('POTENTIAL_CONNECTIONS_potentialConnectio');
+      logFirebaseEvent('potentialConnections_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       logFirebaseEvent('potentialConnections_update_app_state');
       FFAppState().isScreenActive = true;
       safeSetState(() {});

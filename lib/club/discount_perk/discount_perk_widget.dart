@@ -1,10 +1,14 @@
+import '/auth/base_auth_user_provider.dart';
 import '/backend/backend.dart';
 import '/club/perk_card/perk_card_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:async';
+import '/custom_code/actions/index.dart' as actions;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'discount_perk_model.dart';
@@ -32,6 +36,21 @@ class _DiscountPerkWidgetState extends State<DiscountPerkWidget> {
 
     logFirebaseEvent('screen_view',
         parameters: {'screen_name': 'discountPerk'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('DISCOUNT_PERK_discountPerk_ON_INIT_STATE');
+      logFirebaseEvent('discountPerk_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 

@@ -1,9 +1,12 @@
+import '/auth/base_auth_user_provider.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
+import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +41,21 @@ class _Onboarding4WidgetState extends State<Onboarding4Widget>
     _model = createModel(context, () => Onboarding4Model());
 
     logFirebaseEvent('screen_view', parameters: {'screen_name': 'onboarding4'});
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      logFirebaseEvent('ONBOARDING4_onboarding4_ON_INIT_STATE');
+      logFirebaseEvent('onboarding4_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
+    });
+
     animationsMap.addAll({
       'textOnPageLoadAnimation': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -305,7 +323,7 @@ class _Onboarding4WidgetState extends State<Onboarding4Widget>
                         logFirebaseEvent('ONBOARDING4_PAGE_NEXT_BTN_ON_TAP');
                         logFirebaseEvent('Button_navigate_to');
 
-                        context.pushNamed(SignUp001Widget.routeName);
+                        context.pushNamed(Signup00Widget.routeName);
                       },
                       text: 'next',
                       options: FFButtonOptions(

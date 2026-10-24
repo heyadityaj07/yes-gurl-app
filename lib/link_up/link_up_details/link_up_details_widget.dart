@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/backend/push_notifications/push_notifications_util.dart';
@@ -68,6 +69,16 @@ class _LinkUpDetailsWidgetState extends State<LinkUpDetailsWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('LINK_UP_DETAILS_LinkUpDetails_ON_INIT_ST');
+      logFirebaseEvent('LinkUpDetails_custom_action');
+      unawaited(
+        () async {
+          await actions.logScreenView(
+            getCurrentRoute(context) == '/'
+                ? (loggedIn == true ? '/splashScreen' : '/login')
+                : getCurrentRoute(context),
+          );
+        }(),
+      );
       if ((widget!.eventRef?.createdBy == currentUserReference) ||
           widget!.eventRef!.attending.contains(currentUserReference)) {
         logFirebaseEvent('LinkUpDetails_custom_action');

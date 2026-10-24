@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/club/feature_card/feature_card_widget.dart';
@@ -33,8 +34,6 @@ class BabesClubModel extends FlutterFlowModel<BabesClubWidget> {
   PollsRecord? poll;
   // Stores action output result for [Firestore Query - Query a collection] action in babesClub widget.
   OnlineEventsRecord? event;
-  // Stores action output result for [Custom Action - hasUnreadClubMessages] action in babesClub widget.
-  bool? message;
   // Model for FeatureCard.
   late FeatureCardModel featureCardModel1;
   // Model for FeatureCard.

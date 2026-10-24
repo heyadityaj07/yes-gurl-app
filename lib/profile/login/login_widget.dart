@@ -1,3 +1,4 @@
+import '/auth/base_auth_user_provider.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -41,6 +42,12 @@ class _LoginWidgetState extends State<LoginWidget>
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       logFirebaseEvent('LOGIN_PAGE_login_ON_INIT_STATE');
+      logFirebaseEvent('login_custom_action');
+      await actions.logScreenView(
+        getCurrentRoute(context) == '/'
+            ? (loggedIn == true ? '/splashScreen' : '/login')
+            : getCurrentRoute(context),
+      );
       logFirebaseEvent('login_custom_action');
       await actions.checkForceUpdate(
         context,
