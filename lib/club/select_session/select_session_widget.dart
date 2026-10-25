@@ -1,3 +1,4 @@
+import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -446,18 +447,17 @@ class _SelectSessionWidgetState extends State<SelectSessionWidget> {
                         onPressed: () async {
                           logFirebaseEvent(
                               'SELECT_SESSION_COMP_CONTINUE_BTN_ON_TAP');
-                          if (_model.selected == 'annette') {
-                            logFirebaseEvent('Button_launch_u_r_l');
-                            await launchURL(
-                                'https://calendly.com/yesgurl/15-mins-with-francesca');
-                          } else {
-                            logFirebaseEvent('Button_launch_u_r_l');
-                            await launchURL(
-                                'https://calendly.com/app-yesgurl/15-mins-with-annette');
+                          logFirebaseEvent('Button_launch_u_r_l');
+                          final opened = await actions.openFounderCalendly(
+                            context,
+                            _model.selected,
+                          );
+                          if (opened) {
+                            logFirebaseEvent('Button_close_dialog_drawer_etc');
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
                           }
-
-                          logFirebaseEvent('Button_close_dialog_drawer_etc');
-                          Navigator.pop(context);
                         },
                         text: 'continue',
                         options: FFButtonOptions(
